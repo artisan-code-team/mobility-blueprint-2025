@@ -1,0 +1,27 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Exercise {
+  id          String   @id @default(cuid())
+  sanityId    String   @unique
+  name        String
+  description String?
+  imageUrl    String?
+  category    String
+  subCategory String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relation to user completions (to be added later)
+  @@map("exercises")
+} 

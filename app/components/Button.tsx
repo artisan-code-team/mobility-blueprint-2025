@@ -6,7 +6,7 @@ const baseStyles = {
     'inline-flex justify-center rounded-md py-1 px-4 text-base font-semibold tracking-tight shadow-sm focus:outline-none',
   outline:
     'inline-flex justify-center rounded-md border py-[calc(theme(spacing.1)-1px)] px-[calc(theme(spacing.4)-1px)] text-base font-semibold tracking-tight focus:outline-none',
-}
+} as const
 
 const variantStyles = {
   solid: {
@@ -21,11 +21,10 @@ const variantStyles = {
       'border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-800 active:border-slate-200 active:bg-slate-50 active:text-slate-800/70 disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:bg-transparent',
     blue: 'border-blue-300 text-blue-900 hover:border-blue-900 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900 active:text-blue-900/70 disabled:opacity-40 disabled:hover:border-blue-300 disabled:hover:bg-transparent',
   },
-}
+} as const
 
 type VariantKey = keyof typeof variantStyles
-type ColorKey<Variant extends VariantKey> =
-  keyof (typeof variantStyles)[Variant]
+type ColorKey<Variant extends VariantKey> = keyof (typeof variantStyles)[Variant]
 
 type ButtonProps<
   Variant extends VariantKey,
@@ -49,8 +48,8 @@ export function Button<
 
   className = clsx(
     baseStyles[variant],
-    variantStyles[variant][color],
-    className,
+    variantStyles[variant][color] as string,
+    className
   )
 
   return typeof props.href === 'undefined' ? (

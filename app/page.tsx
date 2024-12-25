@@ -1,34 +1,31 @@
 'use client'
 
+import { client } from '@/sanity/lib/client'
 import { Hero } from "./components/Hero"
+import { useEffect, useState } from "react"
+
+interface Exercise {
+  _id: string
+  name: string
+}
 
 export default function Home() {
+  const [exercises, setExercises] = useState<Exercise[]>([])
+
+  useEffect(() => {
+    client.fetch<Exercise[]>(`*[_type == "exercise"] { _id, name }`).then(setExercises)
+  }, [])
+
   return (
     <>
       <Hero />
-      {/* <Introduction /> */}
-      {/* <NavBar /> */}
-      {/* <LateralLines /> */}
-      {/* <Exercise
-        id="Exercise-from-tommy-stroman"
-        author={{
-          name: 'Tommy Stroman',
-          role: 'Front-end developer',
-          image: avatarImage1,
-        }}
-      >
-        <p>
-          “I didn’t know a thing about icon design until I read this book. Now I
-          can create any icon I need in no time. Great resource!”
-        </p>
-      </Exercise> */}
-      {/* <InnerLines /> */}
-      {/* <FrontLine /> */}
-      {/* <FreeChapters /> */}
-      {/* <BackLine /> */}
-      {/* <SpiralLine /> */}
-      {/* <Author /> */}
-      {/* <Footer /> */}
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <ul>
+          {exercises.map((exercise) => (
+            <li key={exercise._id}>{exercise.name}</li>
+          ))}
+        </ul>
+      </div>
     </>
   )
 }

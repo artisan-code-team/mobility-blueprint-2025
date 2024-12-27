@@ -1,0 +1,82 @@
+'use client'
+
+import { signIn } from "next-auth/react"
+import { Button } from "../components/Button"
+import { useState } from "react"
+
+export default function SignIn() {
+  const [email, setEmail] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setMessage(null)
+
+    try {
+      const result = await signIn('email', {
+        email,
+        callbackUrl: '/dashboard',
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setMessage('Something went wrong. Please try again.')
+      } else {
+        setMessage('Check your email for the login link!')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-100">
+      <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-6 shadow-lg">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-800">
+            Sign in to your account
+          </h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Enter your email to sign in or create an account
+          </p>
+        </div>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div>
+            <label htmlFor="email" className="sr-only">
+              Email address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="relative block w-full rounded-md border-0 py-1.5 px-3 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+
+          {message && (
+            <p className="mt-2 text-sm text-slate-600 text-center">
+              {message}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            color="blue"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Sending link...' : 'Sign in with Email'}
+          </Button>
+        </form>
+      </div>
+    </div>
+  )
+} 

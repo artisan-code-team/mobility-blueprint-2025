@@ -1,9 +1,9 @@
 import Image from 'next/image'
 import coverImage from '@/public/images/cover.jpg'
-
 import { useRouter } from 'next/navigation'
 import { Button } from './Button'
 import { StarRating } from './StarRating'
+import { useSession } from 'next-auth/react'
 
 function Testimonial() {
   return (
@@ -13,9 +13,9 @@ function Testimonial() {
       </div>
       <blockquote className="mt-2">
         <p className="font-display text-xl font-medium text-slate-800">
-          “This class literally changed my life. I used to pay for rehab all
+          &ldquo;This class literally changed my life. I used to pay for rehab all
           summer each year until I found this class. This summer I was able to
-          use Dynamic Mobility instead.”
+          use Dynamic Mobility instead.&rdquo;
         </p>
       </blockquote>
       <figcaption className="mt-2 text-sm text-slate-500">
@@ -30,13 +30,14 @@ function Testimonial() {
 
 export function Hero() {
   const router = useRouter()
+  const { status } = useSession()
 
   const handlePracticeOnline = () => {
-    router.push('/sign-in')
-  }
-
-  const handlePracticeInPerson = () => {
-    router.push('/sign-in')
+    if (status === 'authenticated') {
+      router.push('/dashboard')
+    } else {
+      router.push('/sign-in')
+    }
   }
 
   return (
@@ -66,7 +67,7 @@ export function Hero() {
               <Button
                 color="blue"
                 variant="outline"
-                onClick={handlePracticeInPerson}
+                href="/in-person"
               >
                 Practice in person
               </Button>

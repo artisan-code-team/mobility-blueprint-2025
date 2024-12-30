@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
+import Image from 'next/image'
 
 // Define valid categories and subcategories based on our schema
 const validCategories = ['conditioning', 'restorative']
@@ -110,11 +111,12 @@ export default async function ExercisesPage({ params }: Props) {
               className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
             >
               {exercise.imageUrl && (
-                <div className="aspect-w-16 aspect-h-9">
-                  <img
+                <div className="relative aspect-square w-full">
+                  <Image
                     src={exercise.imageUrl}
                     alt={exercise.name}
-                    className="h-48 w-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}

@@ -4,20 +4,18 @@ import { notFound } from 'next/navigation'
 const validCategories = ['conditioning', 'restorative']
 const validSubcategories = ['lateralLines', 'innerLines', 'frontLine', 'backLine', 'spiralLine']
 
-interface Props {
-  params: {
-    category: string
-  }
+type PageParams = {
+  params: Promise<{ category: string }>
 }
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
   return validCategories.map((category) => ({
     category,
   }))
 }
 
-export default function CategoryPage({ params }: Props) {
-  const { category } = params
+export default async function CategoryPage({ params }: PageParams) {
+  const { category } = await params
 
   if (!validCategories.includes(category)) {
     notFound()
@@ -41,8 +39,8 @@ export default function CategoryPage({ params }: Props) {
           return (
             <Link
               key={subcategory}
-              href={`/${category}/${subcategory}`}
-              className="group overflow-hidden rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+              href={`/${category}/${subcategory.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`}
+              className="group block rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md"
             >
               <h2 className="text-xl font-semibold text-slate-800 group-hover:text-blue-600">
                 {title}

@@ -8,24 +8,9 @@ import Image from 'next/image'
 const validCategories = ['conditioning', 'restorative']
 const validSubcategories = ['lateralLines', 'innerLines', 'frontLine', 'backLine', 'spiralLine']
 
-// URL conversion utilities
-function toKebabCase(str: string): string {
-  return str
-    .replace(/([a-z])([A-Z])/g, '$1-$2')
-    .replace(/[\s_]+/g, '-')
-    .toLowerCase()
-}
-
 function toCamelCase(str: string): string {
   return str
     .replace(/-([a-z])/g, (g) => g[1].toUpperCase())
-}
-
-interface Props {
-  params: {
-    category: string
-    subcategory: string
-  }
 }
 
 interface ExerciseData {
@@ -35,22 +20,12 @@ interface ExerciseData {
   imageUrl: string | null
 }
 
-export async function generateStaticParams() {
-  // Generate all valid category/subcategory combinations with kebab-case URLs
-  const paths = []
-  for (const category of validCategories) {
-    for (const subcategory of validSubcategories) {
-      paths.push({
-        category,
-        subcategory: toKebabCase(subcategory),
-      })
-    }
-  }
-  return paths
+type PageParams = {
+  params: Promise<{ category: string; subcategory: string }>
 }
 
-export default async function ExercisesPage({ params }: Props) {
-  const { category, subcategory } = params
+export default async function ExercisesPage({ params }: PageParams) {
+  const { category, subcategory } = await params
   
   // Convert kebab-case URL parameter to camelCase for database query
   const camelSubcategory = toCamelCase(subcategory)

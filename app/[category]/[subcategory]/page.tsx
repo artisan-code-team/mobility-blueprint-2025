@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 import Image from 'next/image'
+import { CompleteExerciseButton } from '@/app/components/CompleteExerciseButton'
+import { redirect } from 'next/navigation'
 
 // Define valid categories and subcategories based on our schema
 const validCategories = ['conditioning', 'restorative']
@@ -13,15 +15,16 @@ function toCamelCase(str: string): string {
     .replace(/-([a-z])/g, (g) => g[1].toUpperCase())
 }
 
-interface ExerciseData {
+type PageParams = {
+  params: Promise<{ category: string; subcategory: string }>
+}
+
+interface ExerciseWithCompletions {
   id: string
   name: string
   description: string | null
   imageUrl: string | null
-}
-
-type PageParams = {
-  params: Promise<{ category: string; subcategory: string }>
+  isCompleted: boolean
 }
 
 export default async function ExercisesPage({ params }: PageParams) {
@@ -36,30 +39,37 @@ export default async function ExercisesPage({ params }: PageParams) {
   }
 
   // Get the current user's session
-  await getServerSession(authConfig)
+  const session = await getServerSession(authConfig)
   
-  // Fetch exercises from Postgres
-  const exercises = await prisma.exercise.findMany({
-    where: {
-      category,
-      subCategory: camelSubcategory,
-    },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      imageUrl: true,
-      // We'll add this once we implement exercise completions
-      // completions: {
-      //   where: {
-      //     userId: session?.user?.id
-      //   }
-      // }
-    },
-    orderBy: {
-      name: 'asc',
-    },
+  if (!session?.user?.email) {
+    redirect('/sign-in')
+  }
+
+  // Get the user ID from the database
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true }
   })
+
+  if (!user) {
+    redirect('/sign-in')
+  }
+
+  // Fetch exercises from Postgres with completion status
+  const exercises = await prisma.$queryRaw<ExerciseWithCompletions[]>`
+    SELECT 
+      e.id,
+      e.name,
+      e.description,
+      e."imageUrl",
+      CASE WHEN ec.id IS NOT NULL THEN true ELSE false END as "isCompleted"
+    FROM exercises e
+    LEFT JOIN exercise_completions ec ON e.id = ec."exerciseId" 
+      AND ec."userId" = ${user.id}
+    WHERE e.category = ${category}
+      AND e."subCategory" = ${camelSubcategory}
+    ORDER BY e.name ASC
+  `
 
   const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1)
   const subcategoryTitle = camelSubcategory
@@ -80,7 +90,7 @@ export default async function ExercisesPage({ params }: PageParams) {
         <p className="text-slate-600">No exercises found for this category.</p>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {exercises.map((exercise: ExerciseData) => (
+          {exercises.map((exercise) => (
             <div
               key={exercise.id}
               className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
@@ -100,7 +110,10 @@ export default async function ExercisesPage({ params }: PageParams) {
                 {exercise.description && (
                   <p className="mt-2 text-sm text-slate-600">{exercise.description}</p>
                 )}
-                {/* We'll add completion status UI here once implemented */}
+                <CompleteExerciseButton
+                  exerciseId={exercise.id}
+                  isCompleted={exercise.isCompleted}
+                />
               </div>
             </div>
           ))}

@@ -21,8 +21,8 @@ model Exercise {
   subCategory String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  completions ExerciseCompletion[]
 
-  // Relation to user completions (to be added later)
   @@map("exercises")
 }
 
@@ -64,6 +64,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  completions   ExerciseCompletion[]
 
   @@map("users")
 }
@@ -75,4 +76,17 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model ExerciseCompletion {
+  id         String   @id @default(cuid())
+  userId     String
+  exerciseId String
+  createdAt  DateTime @default(now())
+  
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, exerciseId])
+  @@map("exercise_completions")
 } 

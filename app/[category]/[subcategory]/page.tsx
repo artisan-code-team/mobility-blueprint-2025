@@ -62,7 +62,11 @@ export default async function ExercisesPage({ params }: PageParams) {
       e.name,
       e.description,
       e."imageUrl",
-      CASE WHEN ec.id IS NOT NULL THEN true ELSE false END as "isCompleted"
+      CASE 
+        WHEN ec.id IS NOT NULL AND ec."createdAt" >= NOW() - INTERVAL '1 month' 
+        THEN true 
+        ELSE false 
+      END as "isCompleted"
     FROM exercises e
     LEFT JOIN exercise_completions ec ON e.id = ec."exerciseId" 
       AND ec."userId" = ${user.id}
@@ -70,6 +74,8 @@ export default async function ExercisesPage({ params }: PageParams) {
       AND e."subCategory" = ${camelSubcategory}
     ORDER BY e.name ASC
   `
+
+  console.log({exercises})
 
   const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1)
   const subcategoryTitle = camelSubcategory

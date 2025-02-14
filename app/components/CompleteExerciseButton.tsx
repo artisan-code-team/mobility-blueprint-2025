@@ -6,9 +6,14 @@ import { useRouter } from 'next/navigation'
 interface CompleteExerciseButtonProps {
   exerciseId: string
   isCompleted: boolean
+  onComplete?: () => void
 }
 
-export function CompleteExerciseButton({ exerciseId, isCompleted }: CompleteExerciseButtonProps) {
+export function CompleteExerciseButton({ 
+  exerciseId, 
+  isCompleted,
+  onComplete 
+}: CompleteExerciseButtonProps) {
   const [isPending, setIsPending] = useState(false)
   const router = useRouter()
 
@@ -30,6 +35,7 @@ export function CompleteExerciseButton({ exerciseId, isCompleted }: CompleteExer
       }
 
       router.refresh()
+      onComplete?.()
     } catch (error) {
       console.error('Error completing exercise:', error)
     } finally {

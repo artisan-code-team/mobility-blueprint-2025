@@ -1,8 +1,9 @@
-'use client'
-
-import { useSession } from "next-auth/react"
+import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import { authConfig } from "@/lib/auth"
+import { DailySuggestions } from "../components/DailySuggestions"
+import { prisma } from "@/lib/prisma"
 
 const categories = [
   {
@@ -17,20 +18,21 @@ const categories = [
   },
 ]
 
-export default function Dashboard() {
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect('/sign-in')
-    },
+export default async function Dashboard() {
+  const session = await getServerSession(authConfig)
+  
+  if (!session?.user?.email) {
+    redirect('/sign-in')
+  }
+
+  // Get the user ID from the database
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true }
   })
 
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="text-slate-600">Loading...</div>
-      </div>
-    )
+  if (!user) {
+    redirect('/sign-in')
   }
 
   return (
@@ -39,9 +41,11 @@ export default function Dashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900">Welcome back!</h1>
           <p className="mt-2 text-slate-600">
-            Signed in as: <span className="font-medium text-slate-900">{session.user?.email}</span>
+            Signed in as: <span className="font-medium text-slate-900">{session.user.email}</span>
           </p>
         </div>
+
+        <DailySuggestions userId={user.id} />
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {categories.map((category) => (

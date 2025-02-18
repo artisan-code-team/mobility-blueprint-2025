@@ -74,9 +74,7 @@ export default async function ExercisesPage({ params }: PageParams) {
       AND e."subCategory" = ${camelSubcategory}
     ORDER BY e.name ASC
   `
-
-  console.log({exercises})
-
+  
   const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1)
   const subcategoryTitle = camelSubcategory
     .replace(/([A-Z])/g, ' $1')

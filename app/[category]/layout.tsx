@@ -12,15 +12,14 @@ function toKebabCase(str: string): string {
     .toLowerCase()
 }
 
-interface Props {
+export default async function CategoryLayout({
+  children,
+  params,
+}: {
   children: React.ReactNode
-  params: {
-    category: string
-  }
-}
-
-export default function CategoryLayout({ children, params }: Props) {
-  const { category } = params
+  params: Promise<{ category: string }>
+}) {
+  const { category } = await params
 
   if (!validCategories.includes(category)) {
     notFound()

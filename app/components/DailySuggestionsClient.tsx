@@ -68,12 +68,12 @@ export function DailySuggestionsClient({
               {exercises.map((exercise) => (
                 <div
                   key={exercise.id}
-                  className={`flex items-center gap-4 p-4 rounded-lg border border-slate-200 bg-white ${
+                  className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border border-slate-200 bg-white ${
                     completedExerciseIds.has(exercise.id) ? 'bg-green-50' : ''
                   }`}
                 >
                   {exercise.imageUrl && (
-                    <div className="relative h-16 w-16 flex-shrink-0">
+                    <div className="relative h-40 w-full sm:h-16 sm:w-16 flex-shrink-0">
                       <Image
                         src={exercise.imageUrl}
                         alt={exercise.name}
@@ -82,7 +82,7 @@ export function DailySuggestionsClient({
                       />
                     </div>
                   )}
-                  <div className="flex-grow">
+                  <div className="flex-grow w-full">
                     <h4 className="font-medium text-slate-900">{exercise.name}</h4>
                     {exercise.subCategory && (
                       <p className="text-sm text-slate-600 line-clamp-2">
@@ -90,11 +90,13 @@ export function DailySuggestionsClient({
                       </p>
                     )}
                   </div>
-                  <CompleteExerciseButton
-                    exerciseId={exercise.id}
-                    isCompleted={completedExerciseIds.has(exercise.id)}
-                    onComplete={() => handleExerciseComplete(exercise.id)}
-                  />
+                  <div className="w-full sm:w-[300px]">
+                    <CompleteExerciseButton
+                      exerciseId={exercise.id}
+                      isCompleted={completedExerciseIds.has(exercise.id)}
+                      onComplete={() => handleExerciseComplete(exercise.id)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -112,10 +114,10 @@ export function DailySuggestionsClient({
               {completions.map((completion) => (
                 <div
                   key={completion.id}
-                  className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 bg-green-50"
+                  className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border border-slate-200 bg-green-50"
                 >
                   {completion.exercise.imageUrl && (
-                    <div className="relative h-16 w-16 flex-shrink-0">
+                    <div className="relative h-40 w-full sm:h-16 sm:w-16 flex-shrink-0">
                       <Image
                         src={completion.exercise.imageUrl}
                         alt={completion.exercise.name}
@@ -132,11 +134,11 @@ export function DailySuggestionsClient({
                       </p>
                     )}
                   </div>
-                  <CompleteExerciseButton
-                    exerciseId={completion.exercise.id}
-                    isCompleted={true}
-                    onComplete={() => {}}
-                  />
+                  <div className="w-full sm:w-[300px]">
+                    <div className="px-4 py-2 text-center text-green-700 bg-green-100 rounded-md">
+                      Completed
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

@@ -1,10 +1,13 @@
-'use client'
+"use client";
 
-import { Hero } from "./components/Hero"
-
+import { Author } from "./components/Author";
+import { Hero } from "./components/Hero";
 
 export default function Home() {
   return (
-    <Hero />
-  )
+    <>
+      <Hero />
+      <Author />
+    </>
+  );
 }

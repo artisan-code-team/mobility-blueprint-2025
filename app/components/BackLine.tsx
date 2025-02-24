@@ -8,6 +8,7 @@ import { GridPattern } from "./GridPattern";
 import clsx from "clsx";
 import { CheckIcon } from "./CheckIcon";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Plan({
   name,
   description,

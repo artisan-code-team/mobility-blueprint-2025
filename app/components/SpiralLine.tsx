@@ -7,6 +7,7 @@ import { GridPattern } from "./GridPattern";
 import { SectionHeading } from "./SectionHeading";
 import { useRouter } from "next/navigation";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Plan({
   name,
   description,
@@ -137,7 +138,12 @@ export function SpiralLine() {
           but are instead intricately interconnected, contributing to the
           body&apos;s dynamic stability and movement efficiency.
         </p>
-        <Button href="/practice/spiral-line" color="blue" className="mt-8">
+        <Button
+          href="/practice/spiral-line"
+          color="blue"
+          className="mt-8"
+          onClick={handlePracticeClick}
+        >
           Practice
         </Button>
       </Container>

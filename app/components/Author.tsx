@@ -50,7 +50,7 @@ export function Author() {
             </p>
             <p className="mt-8">
               <Link
-                href="#"
+                href="https://www.instagram.com/shaunpaulhartman/"
                 className="inline-flex items-center text-base font-medium tracking-tight text-blue-900"
               >
                 <InstagramIcon className="h-10 w-10 fill-current" />

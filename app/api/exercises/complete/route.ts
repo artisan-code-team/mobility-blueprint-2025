@@ -28,6 +28,25 @@ export async function POST(request: Request) {
       return new NextResponse('User not found', { status: 401 })
     }
 
+    // Check if the exercise was completed this month
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+
+    const existingCompletion = await prisma.exerciseCompletion.findFirst({
+      where: {
+        userId: user.id,
+        exerciseId,
+        createdAt: {
+          gte: startOfMonth
+        }
+      }
+    })
+
+    if (existingCompletion) {
+      return new NextResponse('Exercise already completed this month', { status: 409 })
+    }
+
     const completion = await prisma.exerciseCompletion.create({
       data: {
         userId: user.id,

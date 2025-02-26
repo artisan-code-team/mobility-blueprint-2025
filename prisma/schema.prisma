@@ -87,6 +87,5 @@ model ExerciseCompletion {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, exerciseId])
   @@map("exercise_completions")
 } 

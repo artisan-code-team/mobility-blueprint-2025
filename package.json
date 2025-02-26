@@ -15,6 +15,8 @@
     "@headlessui/react": "^2.2.0",
     "@sanity/image-url": "^1.1.0",
     "@sanity/vision": "^3.68.3",
+    "@stripe/react-stripe-js": "^3.1.1",
+    "@stripe/stripe-js": "^5.7.0",
     "clsx": "^2.1.1",
     "next": "15.1.2",
     "next-auth": "^4.24.11",
@@ -23,6 +25,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sanity": "^3.68.3",
+    "stripe": "^17.7.0",
     "styled-components": "^6.1.13"
   },
   "devDependencies": {

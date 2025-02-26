@@ -3,7 +3,7 @@ import Image from "next/image";
 
 import { GridPattern } from "./GridPattern";
 import { SectionHeading } from "./SectionHeading";
-import author from "../images/avatars/author.jpg";
+import author from "@/public/images/author.jpg";
 
 function InstagramIcon(props: React.ComponentPropsWithoutRef<"svg">) {
   return (

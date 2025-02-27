@@ -1,21 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "../components/Button";
+import { useState, useEffect } from "react";
+// import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Stripe from "app/components/Stripe";
 
 export default function SignUp() {
+  // const router = useRouter();
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  // Handle browser history for the modal
+  useEffect(() => {
+    // When the modal is shown, push a new state to history
+    // so that when users press back, they'll stay on the sign-up page
+    if (showPaymentModal) {
+      window.history.pushState({ modal: true }, "");
+
+      // Add listener for popstate (back button)
+      const handlePopState = () => {
+        setShowPaymentModal(false);
+      };
+
+      window.addEventListener("popstate", handlePopState);
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [showPaymentModal]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,50 +50,93 @@ export default function SignUp() {
     setIsLoading(true);
     setMessage(null);
 
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setMessage("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Here you would typically create the user account
+      // Here you would typically create the user account in your database
       // For now, we'll just show the payment modal
       setTimeout(() => {
         setShowPaymentModal(true);
       }, 500);
+    } catch (error) {
+      console.error("Registration error:", error);
+      setMessage("Failed to create account. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Handle modal close
+  const handleCloseModal = () => {
+    setShowPaymentModal(false);
+  };
+
+  // Handle payment success
+  // const handlePaymentSuccess = () => {
+  //   router.push("/dashboard");
+  // };
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-100">
-      <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-6 shadow-lg">
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+      <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-lg shadow-md">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-800">
-            Create an account
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            Create your account
           </h2>
           <p className="mt-2 text-sm text-slate-600">
             Sign up to get started with our service
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="sr-only">
-                Full name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                className="relative block w-full rounded-md border-0 py-1.5 px-3 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder="Full name"
-                value={formData.name}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
+
+        {message && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            {message}
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4 rounded-md shadow-sm">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="firstName" className="sr-only">
+                  First Name
+                </label>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  required
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="First Name"
+                />
+              </div>
+              <div>
+                <label htmlFor="lastName" className="sr-only">
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  required
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Last Name"
+                />
+              </div>
             </div>
+
             <div>
               <label htmlFor="email" className="sr-only">
-                Email address
+                Email
               </label>
               <input
                 id="email"
@@ -74,92 +144,78 @@ export default function SignUp() {
                 type="email"
                 autoComplete="email"
                 required
-                className="relative block w-full rounded-md border-0 py-1.5 px-3 text-slate-900 ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
-                disabled={isLoading}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
               />
             </div>
+
+            {/* Password fields */}
+            {/* <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="confirmPassword" className="sr-only">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm password"
+              />
+            </div> */}
           </div>
 
-          {message && (
-            <p className="mt-2 text-sm text-slate-600 text-center">{message}</p>
-          )}
-
-          <Button
-            type="submit"
-            color="blue"
-            className="w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? "Creating account..." : "Sign Up"}
-          </Button>
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                isLoading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+            >
+              {isLoading ? "Creating account..." : "Sign Up"}
+            </button>
+          </div>
 
           <p className="mt-2 text-center text-sm text-slate-600">
             Already have an account?{" "}
-            <div>
-              <Link
-                href="/sign-in"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Sign in
-              </Link>
-            </div>
+            <Link
+              href="/sign-in"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Log in
+            </Link>
           </p>
         </form>
       </div>
 
-      {/* Payment Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 overflow-y-auto z-50">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75"
-              onClick={() => setShowPaymentModal(false)}
-            ></div>
-            <div className="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div>
-                <div className="mt-3 text-center sm:mt-5">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    Complete Your Subscription
-                  </h3>
-                  <div className="mt-6 space-y-4">
-                    <p className="text-sm text-gray-500">
-                      Please enter your payment details to complete your
-                      subscription.
-                    </p>
-
-                    {/* Placeholder for Stripe Elements */}
-                    <div className="border border-dashed border-gray-300 rounded-md p-6 bg-gray-50">
-                      <p className="text-gray-400 text-center">
-                        Stripe payment form will be integrated here
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-5 sm:mt-6 space-y-2">
-                <Button
-                  type="button"
-                  color="blue"
-                  className="w-full"
-                  onClick={() => setShowPaymentModal(false)}
-                >
-                  Complete Payment
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => setShowPaymentModal(false)}
-                  className="text-sm text-gray-500 w-full text-center"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
+        <div className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50">
+          <Stripe onCancel={handleCloseModal} />
         </div>
       )}
-    </div>
+    </main>
   );
 }

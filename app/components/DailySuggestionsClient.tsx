@@ -26,15 +26,20 @@ export function DailySuggestionsClient({
   completedExercises,
 }: DailySuggestionsClientProps) {
   const [todaysSuggestedExercises, setTodaysSuggestedExercises] = useState(initialSuggestedExercises)
+  const [allExercisesCompleted, setAllExercisesCompleted] = useState(false)
 
   const completedExerciseIds = new Set(
     completedExercises.map(completion => completion.exercise.id)
   )
 
   const handleExerciseComplete = (exerciseId: string) => {
-    setTodaysSuggestedExercises(prev =>
-      prev.filter(exercise => exercise.id !== exerciseId)
-    )
+    setTodaysSuggestedExercises(prev => {
+      const updatedExercises = prev.filter(exercise => exercise.id !== exerciseId)
+      if (updatedExercises.length === 0) {
+        setAllExercisesCompleted(true)
+      }
+      return updatedExercises
+    })
   }
 
   const exercisesByCategory = todaysSuggestedExercises.reduce((acc, exercise) => {
@@ -58,6 +63,11 @@ export function DailySuggestionsClient({
   return (
     <div className="mb-12">
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Daily Suggestions</h2>
+      {allExercisesCompleted && (
+        <div className="mb-6 p-4 rounded-lg border border-green-200 bg-green-50 text-green-700">
+          Congratulations! You have completed all exercises for today!
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {Object.entries(exercisesByCategory).map(([category, exercises]) => (
           <div key={category}>
@@ -147,4 +157,4 @@ export function DailySuggestionsClient({
       </div>
     </div>
   )
-} 
+}

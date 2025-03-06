@@ -5,7 +5,7 @@ import { CheckIcon } from "./CheckIcon";
 import { Container } from "./Container";
 import { GridPattern } from "./GridPattern";
 import { SectionHeading } from "./SectionHeading";
-// import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Plan({
@@ -107,11 +107,11 @@ function Plan({
 }
 
 export function SpiralLine() {
-  // const router = useRouter();
+  const router = useRouter();
 
-  // const handlePracticeClick = () => {
-  //   router.push("/sign-in");
-  // };
+  const handlePracticeClick = () => {
+    router.push("/sign-in");
+  };
 
   return (
     <section
@@ -142,7 +142,7 @@ export function SpiralLine() {
           href="/practice/spiral-line"
           color="blue"
           className="mt-8"
-          // onClick={handlePracticeClick}
+          onClick={handlePracticeClick}
         >
           Practice
         </Button>

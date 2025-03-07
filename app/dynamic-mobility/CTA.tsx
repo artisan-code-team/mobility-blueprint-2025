@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
+import Image from "next/image";
 
 export default function CTA() {
   return (
@@ -8,11 +9,6 @@ export default function CTA() {
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-12 lg:gap-x-8 lg:px-8">
         <div className="px-6 pb-24 pt-10 sm:pb-32 lg:col-span-7 lg:px-0 lg:pb-48 lg:pt-40 xl:col-span-6">
           <div className="mx-auto max-w-lg lg:mx-0">
-            <img
-              alt="Your Company"
-              src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-              className="h-11"
-            />
             <div className="hidden sm:mt-32 sm:flex lg:mt-16">
               <div className="relative rounded-full px-3 py-1 text-sm/6 text-gray-500 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
                 Anim aute id magna aliqua ad ad non deserunt sunt.{" "}
@@ -48,12 +44,47 @@ export default function CTA() {
             </div>
           </div>
         </div>
-        <div className="relative lg:col-span-5 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
-          <img
-            alt=""
-            src="https://images.unsplash.com/photo-1487017159836-4e23ece2e4cf?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2102&q=80"
-            className="aspect-[3/2] w-full bg-gray-50 object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full"
-          />
+        <div className="relative h-96 sm:h-[32rem] md:h-[36rem] lg:col-span-5 lg:h-auto lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
+          {/* Single image for small screens */}
+          <div className="relative w-full h-full md:hidden">
+            <Image
+              alt="Person demonstrating mobility exercise"
+              src="/images/mobility2.JPG"
+              fill
+              quality={100}
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+
+          {/* Two images for medium screens and up */}
+          <div className="hidden md:grid md:grid-rows-2 h-full">
+            {/* Top Image */}
+            <div className="relative w-full h-full">
+              <Image
+                alt="Person demonstrating mobility exercise - upper body"
+                src="/images/mobility3.JPG"
+                fill
+                quality={100}
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
+
+            {/* Bottom Image */}
+            <div className="relative w-full h-full">
+              <Image
+                alt="Person demonstrating mobility exercise - lower body"
+                src="/images/mobility2.JPG"
+                fill
+                quality={100}
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

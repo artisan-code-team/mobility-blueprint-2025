@@ -34,11 +34,10 @@ export function Author() {
             />
           </div>
           <div className="px-4 py-10 sm:px-10 sm:py-16 md:py-20 lg:px-20 lg:py-32">
-            <SectionHeading id="author-title">Author</SectionHeading>
-            <p className="mt-8 font-display text-5xl font-extrabold tracking-tight text-slate-800 sm:text-6xl">
-              <span className="block text-blue-900">Shaun Hartman –</span>{" "}
-              Creator of ‘Mobility Blueprint’.
-            </p>
+            <SectionHeading id="author-title">Creator</SectionHeading>
+            <h3 className="mt-8 font-display text-5xl font-extrabold tracking-tight text-slate-800 sm:text-6xl">
+              <span className="block text-blue-900">Shaun Hartman</span>
+            </h3>
             <p className="mt-4 text-lg tracking-tight text-slate-800">
               I’ve been designing this practice for 7 years. I have been
               incorporating it into an extremely busy schedule with a demanding

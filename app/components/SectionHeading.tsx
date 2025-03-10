@@ -7,7 +7,7 @@ export function SectionHeading({
   ...props
 }: React.ComponentPropsWithoutRef<"h2"> & { number?: string }) {
   return (
-    <h2
+    <div
       className={clsx(
         className,
         "inline-flex items-center rounded-full px-4 py-1 text-blue-900 ring-1 ring-inset ring-blue-900"
@@ -25,6 +25,6 @@ export function SectionHeading({
       >
         {children}
       </span>
-    </h2>
+    </div>
   );
 }

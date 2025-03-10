@@ -41,7 +41,7 @@ export default function CTA() {
               alt="Person demonstrating mobility exercise"
               src="/images/mobility3.JPG"
               fill
-              quality={100}
+              quality={80}
               priority
               sizes="100vw"
               className="object-cover"

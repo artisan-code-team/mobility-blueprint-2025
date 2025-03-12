@@ -9,15 +9,22 @@ export default function CTA() {
       <div className="mx-auto max-w-7xl lg:grid lg:grid-cols-12 lg:gap-x-8 lg:px-8">
         <div className="px-6 pb-24 pt-10 sm:pb-32 lg:col-span-7 lg:px-0 lg:pb-48 lg:pt-40 xl:col-span-6">
           <div className="mx-auto max-w-lg lg:mx-0">
-            <h1 className="mt-24 text-pretty text-5xl font-semibold tracking-tight text-gray-900 sm:mt-10 sm:text-7xl">
+            <h1 className="mt-6 text-pretty text-5xl font-semibold tracking-tight text-gray-900 sm:mt-10 sm:text-7xl">
               Unlock Your Body&apos;s Potential
             </h1>
-            <p className="mt-8 text-pretty text-lg font-medium text-gray-500 sm:text-xl/8">
+            <p className="mt-6 text-pretty text-lg/8 text-gray-400">
+              Every Monday, Wednesday, &amp; Friday from 7:30 - 8:15
+              AM
+            </p>
+            <p className="text-pretty text-lg/8 text-gray-400">
+              North Little Rock Athletic Club
+            </p>
+            <p className="mt-6 text-pretty text-lg font-medium text-gray-500 sm:text-xl/8">
               This is your blueprint for better movement, the focus is on
               conditioning and restoring your body&apos;s connective tissue.
               This unique approach goes beyond traditional workouts, helping you
               enhance your mobility, prevent injuries, look, and feel your best
-              at any age.
+              at any age. The earlier you start, the better!
             </p>
             <div className="mt-10 flex items-center gap-x-6">
               {/* BRING BACK WHEN SIGN UP IS AVAILABLE */}

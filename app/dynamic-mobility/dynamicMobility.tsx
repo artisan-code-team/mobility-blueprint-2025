@@ -27,10 +27,6 @@ export default function dynamicMobility() {
               <h2 className="text-pretty text-4xl font-semibold tracking-tight text-white sm:text-5xl">
                 Experience Dynamic Mobility
               </h2>
-              <p className="mt-6 text-pretty text-lg/8 text-gray-300">
-                Classes every Monday, Wednesday, and Friday from 7:30 AM - 8:15
-                AM
-              </p>
               <ul
                 role="list"
                 className="mt-10 grid grid-cols-1 gap-x-8 gap-y-3 text-base/7 text-white sm:grid-cols-2"

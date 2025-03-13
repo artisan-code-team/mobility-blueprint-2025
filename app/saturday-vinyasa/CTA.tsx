@@ -18,8 +18,8 @@ export default function CTA() {
               Sixth House Wellness Studio
             </p>
             <p className="mt-6 text-pretty text-lg font-medium text-gray-500 sm:text-xl/8">
-              Hi 👋, I'm Shaun and I'm excited to invite students of all levels to experience a fun, fast-paced flow designed to energize your weekend! 
-              Whether you're a beginner or an experienced yogi, this session will help you connect with your body and breath in a supportive environment.
+              Hi 👋, I&apos;m Shaun and I&apos;m excited to invite students of all levels to experience a fun, fast-paced flow designed to energize your weekend! 
+              Whether you&apos;re a beginner or an experienced yogi, this session will help you connect with your body and breath in a supportive environment.
             </p>
             <div className="mt-8 bg-gray-50 p-6 rounded-lg shadow-sm ring-1 ring-gray-900/5">
               <h2 className="text-2xl font-semibold tracking-tight text-gray-900">

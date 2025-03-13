@@ -1,4 +1,5 @@
 import Image from "next/image";
+import SignupForm from "./SignupForm";
 
 export default function CTA() {
   return (
@@ -17,9 +18,18 @@ export default function CTA() {
               Sixth House Wellness Studio
             </p>
             <p className="mt-6 text-pretty text-lg font-medium text-gray-500 sm:text-xl/8">
-              Hi 👋, I’m Shaun and I’m excited to invite students of all levels to experience a fun, fast-paced flow designed to energize your weekend! 
-              Whether you’re a beginner or an experienced yogi, this session will help you connect with your body and breath in a supportive environment.
+              Hi 👋, I'm Shaun and I'm excited to invite students of all levels to experience a fun, fast-paced flow designed to energize your weekend! 
+              Whether you're a beginner or an experienced yogi, this session will help you connect with your body and breath in a supportive environment.
             </p>
+            <div className="mt-8 bg-gray-50 p-6 rounded-lg shadow-sm ring-1 ring-gray-900/5">
+              <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+                Reserve Your Spot
+              </h2>
+              <p className="mt-2 text-sm text-gray-500">
+                Join us for an invigorating Saturday morning practice. Limited spots available!
+              </p>
+              <SignupForm />
+            </div>
           </div>
         </div>
         <div className="relative h-96 sm:h-[32rem] md:h-[36rem] lg:col-span-5 lg:h-auto lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">

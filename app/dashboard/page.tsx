@@ -5,6 +5,13 @@ import { authConfig } from "@/lib/auth"
 import { DailySuggestions } from "../components/DailySuggestions"
 import { prisma } from "@/lib/prisma"
 
+/**
+ * Categories of exercises available in the app.
+ * Each category has:
+ * - name: Display name shown to users
+ * - slug: URL-friendly identifier used in routing
+ * - description: Brief explanation of the category's focus
+ */
 const categories = [
   {
     name: 'Conditioning',

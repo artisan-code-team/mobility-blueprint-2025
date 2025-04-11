@@ -10,6 +10,18 @@ interface Exercise {
   subCategory: string | null
 }
 
+/**
+ * Gets suggested exercises for a user that they haven't completed in the last month.
+ * 
+ * This function:
+ * 1. Uses a CTE to rank exercises within each category/subcategory randomly
+ * 2. Filters out exercises completed by the user in the last month
+ * 3. Selects one random exercise from each category/subcategory combination
+ * 4. Returns exercises sorted by category and name
+ * 
+ * @param userId - The ID of the user to get suggestions for
+ * @returns Array of suggested Exercise objects
+ */
 async function getSuggestedExercises(userId: string) {
   const exercises = await prisma.$queryRaw<Exercise[]>`
     WITH RankedExercises AS (
@@ -40,6 +52,8 @@ async function getSuggestedExercises(userId: string) {
 export async function DailySuggestions({ userId }: { userId: string }) {
   const suggestedExercises = await getSuggestedExercises(userId)
   
+  // Get exercises completed by the user today by querying completions since midnight
+  // and including the full exercise details for each completion
   const completedExercises = await prisma.exerciseCompletion.findMany({
     where: {
       userId,

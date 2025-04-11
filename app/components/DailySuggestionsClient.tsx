@@ -21,6 +21,19 @@ interface DailySuggestionsClientProps {
   }[]
 }
 
+/**
+ * Client-side component that displays suggested and completed exercises.
+ * 
+ * This component:
+ * 1. Shows suggested exercises grouped by category
+ * 2. Tracks exercise completion state
+ * 3. Shows a success message when all exercises are completed
+ * 4. Displays completed exercises in a separate section
+ * 5. Handles exercise completion through CompleteExerciseButton
+ *
+ * @param initialSuggestedExercises - Array of exercises suggested for the day
+ * @param completedExercises - Array of exercises completed today
+ */
 export function DailySuggestionsClient({
   initialSuggestedExercises,
   completedExercises,
@@ -32,6 +45,16 @@ export function DailySuggestionsClient({
     completedExercises.map(completion => completion.exercise.id)
   )
 
+  /**
+   * Handles completion of an exercise by removing it from suggested exercises.
+   * 
+   * This function:
+   * 1. Filters out the completed exercise from the suggested exercises list
+   * 2. If no exercises remain, sets allExercisesCompleted flag to true
+   * 3. Returns the updated list of suggested exercises
+   * 
+   * @param exerciseId - ID of the exercise that was completed
+   */
   const handleExerciseComplete = (exerciseId: string) => {
     setTodaysSuggestedExercises(prev => {
       const updatedExercises = prev.filter(exercise => exercise.id !== exerciseId)
@@ -42,6 +65,14 @@ export function DailySuggestionsClient({
     })
   }
 
+  /**
+   * Groups suggested exercises by their category.
+   * 
+   * This reduces the exercises array into an object where:
+   * - Keys are lowercase category names
+   * - Values are arrays of exercises in that category
+   * Used to organize exercises for display in the UI.
+   */
   const exercisesByCategory = todaysSuggestedExercises.reduce((acc, exercise) => {
     const category = exercise.category.toLowerCase()
     if (!acc[category]) {
@@ -51,6 +82,14 @@ export function DailySuggestionsClient({
     return acc
   }, {} as Record<string, Exercise[]>)
 
+  /**
+   * Groups completed exercises by their category.
+   * 
+   * This reduces the completions array into an object where:
+   * - Keys are lowercase category names
+   * - Values are arrays of exercise completions in that category
+   * Used to track which exercises have been completed in each category.
+   */
   const completedExercisesByCategory = completedExercises.reduce((acc, completion) => {
     const category = completion.exercise.category.toLowerCase()
     if (!acc[category]) {

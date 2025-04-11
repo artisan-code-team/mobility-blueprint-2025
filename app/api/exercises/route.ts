@@ -3,6 +3,17 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 
+/**
+ * GET endpoint that retrieves exercises filtered by category and subcategory.
+ * 
+ * This function:
+ * 1. Validates that both category and subcategory query parameters are provided
+ * 2. Verifies user authentication via session
+ * 3. Queries the database for matching exercises
+ * 4. Returns exercises sorted alphabetically by name, including their id, name, description and imageUrl
+ * 
+ * @returns JSON response with filtered exercises, or error if parameters missing/invalid
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -19,6 +30,8 @@ export async function GET(request: Request) {
     // Get the current user's session
     await getServerSession(authConfig)
 
+    // Query exercises matching the category and subcategory, selecting only needed fields
+    // and sorting alphabetically by name for consistent ordering
     const exercises = await prisma.exercise.findMany({
       where: {
         category,
@@ -29,12 +42,6 @@ export async function GET(request: Request) {
         name: true,
         description: true,
         imageUrl: true,
-        // We'll add this once we implement exercise completions
-        // completions: {
-        //   where: {
-        //     userId: session?.user?.id
-        //   }
-        // }
       },
       orderBy: {
         name: 'asc',

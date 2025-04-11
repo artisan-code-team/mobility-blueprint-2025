@@ -1,14 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { DailySuggestionsClient } from './DailySuggestionsClient'
-
-interface Exercise {
-  id: string
-  name: string
-  description: string | null
-  imageUrl: string | null
-  category: string
-  subCategory: string | null
-}
+import { Exercise } from '@/app/types/exercise'
 
 /**
  * Gets suggested exercises for a user that they haven't completed in the last month.

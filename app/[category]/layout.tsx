@@ -32,7 +32,7 @@ export default async function CategoryLayout({
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center space-x-8">
               <Link
-                href="/"
+                href="/dashboard"
                 className="text-lg font-semibold text-slate-800 hover:text-blue-600"
               >
                 Mobility Blueprint

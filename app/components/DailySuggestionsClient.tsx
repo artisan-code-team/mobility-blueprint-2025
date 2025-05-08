@@ -3,15 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { CompleteExerciseButton } from './CompleteExerciseButton'
-
-interface Exercise {
-  id: string
-  name: string
-  description: string | null
-  imageUrl: string | null
-  category: string
-  subCategory: string | null
-}
+import { Exercise } from '@/app/types/exercise'
 
 interface DailySuggestionsClientProps {
   initialSuggestedExercises: Exercise[]

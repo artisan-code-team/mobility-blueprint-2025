@@ -1,25 +1,35 @@
 import { prisma } from '@/lib/prisma'
 import { DailySuggestionsClient } from './DailySuggestionsClient'
+import { Exercise } from '@/app/types/exercise'
 
-interface Exercise {
-  id: string
-  name: string
-  description: string | null
-  imageUrl: string | null
-  category: string
-  subCategory: string | null
-}
-
-async function getSuggestedExercises(userId: string) {
+/**
+ * Gets suggested exercises for a user that they haven't completed in the last month.
+ * 
+ * The SQL query:
+ * 1. Uses a CTE to create a temporary table of exercises with their rank
+ * 2. Ranks exercises within each category/subcategory randomly
+ * 3. Filters out exercises completed by the user in the last month
+ * 4. Selects one random exercise from each category/subcategory combination
+ * 5. Returns exercises sorted by category and name
+ * 
+ * Note: This query can be tested directly in Prisma Studio or any SQL client
+ * 
+ * @param userId - The ID of the user to get suggestions for
+ * @returns Array of suggested Exercise objects
+ */
+async function getSuggestedExercises(userId: string): Promise<Exercise[]> {
+  // Using raw SQL for efficient random selection and grouping via window functions
   const exercises = await prisma.$queryRaw<Exercise[]>`
     WITH RankedExercises AS (
       SELECT 
         e.*,
+        -- Assign random rank within each category/subcategory group
         ROW_NUMBER() OVER (
           PARTITION BY e.category, e."subCategory"
           ORDER BY (SELECT random())
         ) as rn
       FROM exercises e
+      -- Exclude exercises completed in the last month
       WHERE NOT EXISTS (
         SELECT 1 
         FROM exercise_completions ec 
@@ -28,7 +38,14 @@ async function getSuggestedExercises(userId: string) {
         AND ec."createdAt" >= NOW() - INTERVAL '1 month'
       )
     )
-    SELECT id, name, description, "imageUrl", category, "subCategory"
+    -- Select only the randomly chosen exercise from each group
+    SELECT 
+      id, 
+      name, 
+      description, 
+      "imageUrl", 
+      category, 
+      "subCategory"
     FROM RankedExercises
     WHERE rn = 1
     ORDER BY category, name;
@@ -40,6 +57,11 @@ async function getSuggestedExercises(userId: string) {
 export async function DailySuggestions({ userId }: { userId: string }) {
   const suggestedExercises = await getSuggestedExercises(userId)
   
+  // Using Prisma's query builder here (instead of raw SQL) because:
+  // 1. It's a simple query - just filtering by user/date with a basic join
+  // 2. We get automatic type safety for the exercise relationship
+  // 3. Prisma handles the date truncation and timezone conversion
+  // 4. The generated SQL will be just as efficient for this simple case
   const completedExercises = await prisma.exerciseCompletion.findMany({
     where: {
       userId,

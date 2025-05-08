@@ -3,15 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { CompleteExerciseButton } from './CompleteExerciseButton'
-
-interface Exercise {
-  id: string
-  name: string
-  description: string | null
-  imageUrl: string | null
-  category: string
-  subCategory: string | null
-}
+import { Exercise } from '@/app/types/exercise'
 
 interface DailySuggestionsClientProps {
   initialSuggestedExercises: Exercise[]
@@ -21,22 +13,58 @@ interface DailySuggestionsClientProps {
   }[]
 }
 
+/**
+ * Client-side component that displays suggested and completed exercises.
+ * 
+ * This component:
+ * 1. Shows suggested exercises grouped by category
+ * 2. Tracks exercise completion state
+ * 3. Shows a success message when all exercises are completed
+ * 4. Displays completed exercises in a separate section
+ * 5. Handles exercise completion through CompleteExerciseButton
+ *
+ * @param initialSuggestedExercises - Array of exercises suggested for the day
+ * @param completedExercises - Array of exercises completed today
+ */
 export function DailySuggestionsClient({
   initialSuggestedExercises,
   completedExercises,
 }: DailySuggestionsClientProps) {
   const [todaysSuggestedExercises, setTodaysSuggestedExercises] = useState(initialSuggestedExercises)
+  const [allExercisesCompleted, setAllExercisesCompleted] = useState(false)
 
   const completedExerciseIds = new Set(
     completedExercises.map(completion => completion.exercise.id)
   )
 
+  /**
+   * Handles completion of an exercise by removing it from suggested exercises.
+   * 
+   * This function:
+   * 1. Filters out the completed exercise from the suggested exercises list
+   * 2. If no exercises remain, sets allExercisesCompleted flag to true
+   * 3. Returns the updated list of suggested exercises
+   * 
+   * @param exerciseId - ID of the exercise that was completed
+   */
   const handleExerciseComplete = (exerciseId: string) => {
-    setTodaysSuggestedExercises(prev =>
-      prev.filter(exercise => exercise.id !== exerciseId)
-    )
+    setTodaysSuggestedExercises(prev => {
+      const updatedExercises = prev.filter(exercise => exercise.id !== exerciseId)
+      if (updatedExercises.length === 0) {
+        setAllExercisesCompleted(true)
+      }
+      return updatedExercises
+    })
   }
 
+  /**
+   * Groups suggested exercises by their category.
+   * 
+   * This reduces the exercises array into an object where:
+   * - Keys are lowercase category names
+   * - Values are arrays of exercises in that category
+   * Used to organize exercises for display in the UI.
+   */
   const exercisesByCategory = todaysSuggestedExercises.reduce((acc, exercise) => {
     const category = exercise.category.toLowerCase()
     if (!acc[category]) {
@@ -46,6 +74,14 @@ export function DailySuggestionsClient({
     return acc
   }, {} as Record<string, Exercise[]>)
 
+  /**
+   * Groups completed exercises by their category.
+   * 
+   * This reduces the completions array into an object where:
+   * - Keys are lowercase category names
+   * - Values are arrays of exercise completions in that category
+   * Used to track which exercises have been completed in each category.
+   */
   const completedExercisesByCategory = completedExercises.reduce((acc, completion) => {
     const category = completion.exercise.category.toLowerCase()
     if (!acc[category]) {
@@ -58,6 +94,11 @@ export function DailySuggestionsClient({
   return (
     <div className="mb-12">
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Daily Suggestions</h2>
+      {allExercisesCompleted && (
+        <div className="mb-6 p-4 rounded-lg border border-green-200 bg-green-50 text-green-700">
+          Congratulations! You have completed all exercises for today!
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {Object.entries(exercisesByCategory).map(([category, exercises]) => (
           <div key={category}>
@@ -147,4 +188,4 @@ export function DailySuggestionsClient({
       </div>
     </div>
   )
-} 
+}

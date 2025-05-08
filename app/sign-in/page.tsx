@@ -9,6 +9,18 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
+  /**
+   * Handles the email sign in form submission.
+   * 
+   * This function:
+   * 1. Prevents default form submission
+   * 2. Shows loading state while request is in progress
+   * 3. Attempts to sign in using the provided email address
+   * 4. Displays success/error message based on the result
+   * 5. Redirects to dashboard on successful authentication
+   * 
+   * @param e - The form submission event
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)

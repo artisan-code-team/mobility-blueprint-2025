@@ -11,7 +11,17 @@ interface SanityExercise {
   subCategory?: string
 }
 
-// Helper function to sync a single exercise
+/**
+ * Syncs a single exercise between Sanity CMS and the Postgres database.
+ * 
+ * This function:
+ * 1. Fetches the exercise data from Sanity CMS using the provided ID
+ * 2. If the exercise no longer exists in Sanity, deletes it from Postgres
+ * 3. If the exercise exists, creates or updates it in Postgres with the latest Sanity data
+ * 
+ * @param exerciseId - The Sanity _id of the exercise to sync
+ * @returns The synced exercise data from Postgres, or null if the exercise was deleted
+ */
 async function syncExercise(exerciseId: string) {
   const exercise = await client.fetch(`*[_type == "exercise" && _id == $id][0]{
     _id,
@@ -54,6 +64,11 @@ async function syncExercise(exerciseId: string) {
   })
 }
 
+/**
+ * POST endpoint that syncs a single exercise from Sanity CMS to the local database.
+ * Receives a webhook payload from Sanity, then syncs the exercise using syncExercise().
+ * Returns a success message and the synced exercise data.
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -88,7 +103,12 @@ export async function POST(request: Request) {
   }
 }
 
-// Keep the original sync all endpoint as GET
+/**
+ * GET endpoint that syncs all exercises from Sanity CMS to the local database.
+ * Fetches all exercises from Sanity, then syncs each one individually using syncExercise().
+ * Returns the total number of exercises synced and a success message.
+ * Used to perform a full sync of all exercise data.
+ */
 export async function GET() {
   try {
     const exercises = await client.fetch(`*[_type == "exercise"]{

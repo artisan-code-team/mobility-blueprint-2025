@@ -3,7 +3,7 @@ import coverImage from '@/public/images/cover.jpg'
 import { useRouter } from 'next/navigation'
 import { Button } from './Button'
 import { StarRating } from './StarRating'
-import { useSession } from 'next-auth/react'
+// import { useSession } from 'next-auth/react'  // Commented out temporarily
 
 function Testimonial() {
   return (
@@ -30,14 +30,16 @@ function Testimonial() {
 
 export function Hero() {
   const router = useRouter()
-  const { status } = useSession()
+  // const { status } = useSession()  // Commented out temporarily
 
   const handlePracticeOnline = () => {
-    if (status === 'authenticated') {
-      router.push('/dashboard')
-    } else {
-      router.push('/sign-in')
-    }
+    router.push('/coming-soon')
+    // Temporary solution - commenting out original functionality
+    // if (status === 'authenticated') {
+    //   router.push('/dashboard')
+    // } else {
+    //   router.push('/sign-in')
+    // }
   }
 
   return (

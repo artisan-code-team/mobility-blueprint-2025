@@ -1,4 +1,12 @@
 import Link from 'next/link'
+import { CheckCircleIcon } from "@heroicons/react/20/solid"
+
+const benefits = [
+  "Enhance Flexibility: Improve your range of motion and reduce stiffness.",
+  "Boost Performance: Elevate your athletic abilities and feel more free in your daily movement.",
+  "Injury Prevention: Strengthen your connective tissue to avoid common injuries like ankle sprains & plantar fasciitis",
+  "Feel Energized: Experience increased vitality and overall well-being.",
+];
 
 export default function InPersonPage() {
   return (
@@ -31,30 +39,35 @@ export default function InPersonPage() {
             LIVE CLASSES
           </h1>
 
-          <div className="mt-8 text-center">
-            <p className="text-xl text-slate-600">
-              Live classes are currently held at the North Little Rock Athletic Club
+          <div className="mt-16 border-t border-slate-200 pt-16">
+            <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
+              SATURDAY VINYASA
+            </h2>
+
+            <p className="mt-6 text-center text-lg leading-relaxed text-slate-600">
+              By enhancing traditional yoga with a focus on the myofascial meridians, this program brings many benefits to the body. But, most of all, it is a lively and engaging flow that will leave you feeling invigorated!
             </p>
 
-            <p className="mt-6 text-xl text-slate-600">
-              Monday, Wednesday, & Friday
-            </p>
+            <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {benefits.map((benefit) => (
+                <li key={benefit} className="flex gap-x-3 text-slate-600">
+                  <CheckCircleIcon className="h-6 w-6 flex-none text-blue-600" />
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
 
-            <p className="mt-2 text-xl text-slate-600">
-              7:30am - 8:15am
-            </p>
-
-            <Link
-              href="https://www.nlrac.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-8 inline-block text-lg font-semibold text-blue-600 hover:text-blue-500"
-            >
-              FIND OUT MORE ABOUT NLRAC →
-            </Link>
+            <div className="mt-8 text-center">
+              <Link
+                href="/saturday-vinyasa"
+                className="inline-block text-lg font-semibold text-blue-600 hover:text-blue-500"
+              >
+                LEARN MORE ABOUT SATURDAY VINYASA →
+              </Link>
+            </div>
           </div>
 
-          <div className="mt-16">
+          <div className="mt-16 border-t border-slate-200 pt-16">
             <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
               DYNAMIC MOBILITY FOR LONGEVITY
             </h2>
@@ -64,6 +77,29 @@ export default function InPersonPage() {
               We leave out the Cardio Peak section & alternate the Flow & Strength sections. 
               It is an all levels class with a focus on getting the most out of life at any age.
             </p>
+
+            <div className="mt-8 text-center">
+              <p className="text-xl text-slate-600">
+                Live classes are currently held at the North Little Rock Athletic Club
+              </p>
+
+              <p className="mt-6 text-xl text-slate-600">
+                Monday, Wednesday, & Friday
+              </p>
+
+              <p className="mt-2 text-xl text-slate-600">
+                7:30am - 8:15am
+              </p>
+
+              <Link
+                href="https://www.nlrac.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-8 inline-block text-lg font-semibold text-blue-600 hover:text-blue-500"
+              >
+                FIND OUT MORE ABOUT NLRAC →
+              </Link>
+            </div>
           </div>
         </div>
       </div>

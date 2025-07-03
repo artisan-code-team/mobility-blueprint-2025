@@ -110,7 +110,7 @@ export function SpiralLine() {
   const router = useRouter();
 
   const handlePracticeClick = () => {
-    router.push("/sign-in");
+    router.push("/coming-soon");
   };
 
   return (
@@ -139,7 +139,6 @@ export function SpiralLine() {
           body&apos;s dynamic stability and movement efficiency.
         </p>
         <Button
-          href="/practice/spiral-line"
           color="blue"
           className="mt-8"
           onClick={handlePracticeClick}

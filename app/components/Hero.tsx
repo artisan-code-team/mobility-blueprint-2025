@@ -22,7 +22,7 @@ function Testimonial() {
         <strong className="font-semibold text-blue-900 before:content-['—_']">
           Tanya
         </strong>
-        , School Teacher
+        , School Administrator
       </figcaption>
     </figure>
   )

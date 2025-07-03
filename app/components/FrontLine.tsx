@@ -64,7 +64,7 @@ export function FrontLine() {
   const router = useRouter();
 
   const handlePracticeClick = () => {
-    router.push("/sign-in");
+    router.push("/coming-soon");
   };
 
   return (

@@ -57,16 +57,14 @@ async function getSuggestedExercises(userId: string): Promise<Exercise[]> {
 export async function DailySuggestions({ userId }: { userId: string }) {
   const suggestedExercises = await getSuggestedExercises(userId)
   
-  // Using Prisma's query builder here (instead of raw SQL) because:
-  // 1. It's a simple query - just filtering by user/date with a basic join
-  // 2. We get automatic type safety for the exercise relationship
-  // 3. Prisma handles the date truncation and timezone conversion
-  // 4. The generated SQL will be just as efficient for this simple case
+  // Get exercises completed today (from midnight to now)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
   const completedExercises = await prisma.exerciseCompletion.findMany({
     where: {
       userId,
       createdAt: {
-        gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        gte: today,
       },
     },
     include: {

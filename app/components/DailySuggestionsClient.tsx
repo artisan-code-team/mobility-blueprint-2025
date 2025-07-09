@@ -9,6 +9,7 @@ interface DailySuggestionsClientProps {
   initialSuggestedExercises: Exercise[]
   completedExercises: {
     id: string
+    createdAt: Date
     exercise: Exercise
   }[]
 }
@@ -135,6 +136,7 @@ export function DailySuggestionsClient({
                     <CompleteExerciseButton
                       exerciseId={exercise.id}
                       isCompleted={completedExerciseIds.has(exercise.id)}
+                      completedAt={completedExercises.find(c => c.exercise.id === exercise.id)?.createdAt || null}
                       onComplete={() => handleExerciseComplete(exercise.id)}
                     />
                   </div>

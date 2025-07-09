@@ -25,6 +25,7 @@ interface ExerciseWithCompletions {
   description: string | null
   imageUrl: string | null
   isCompleted: boolean
+  completedAt: Date | null
 }
 
 export default async function ExercisesPage({ params }: PageParams) {
@@ -66,7 +67,8 @@ export default async function ExercisesPage({ params }: PageParams) {
         WHEN ec.id IS NOT NULL AND ec."createdAt" >= NOW() - INTERVAL '1 month' 
         THEN true 
         ELSE false 
-      END as "isCompleted"
+      END as "isCompleted",
+      ec."createdAt" as "completedAt"
     FROM exercises e
     LEFT JOIN exercise_completions ec ON e.id = ec."exerciseId" 
       AND ec."userId" = ${user.id}
@@ -94,7 +96,7 @@ export default async function ExercisesPage({ params }: PageParams) {
         <p className="text-slate-600">No exercises found for this category.</p>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {exercises.map((exercise) => (
+          {exercises.map((exercise: ExerciseWithCompletions) => (
             <div
               key={exercise.id}
               className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
@@ -117,6 +119,7 @@ export default async function ExercisesPage({ params }: PageParams) {
                 <CompleteExerciseButton
                   exerciseId={exercise.id}
                   isCompleted={exercise.isCompleted}
+                  completedAt={exercise.completedAt}
                 />
               </div>
             </div>

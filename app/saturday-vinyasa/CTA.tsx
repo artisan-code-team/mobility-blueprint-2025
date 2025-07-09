@@ -42,7 +42,7 @@ export default function CTA() {
               <h2 className="text-2xl font-semibold tracking-tight text-gray-900">VISIT OUR BOOKING PAGE</h2>
               <p className="mt-2 text-sm text-gray-500">Space is limited to ensure a quality experience.</p>
               <p className="mt-2 text-sm text-gray-500">Walk-ins are welcome for Pay What You Can. For advance booking, use the button below.</p>
-              <a href="https://sixthhouse.as.me/schedule/4c83c091?template=class" target="_blank" rel="noopener noreferrer" className="mt-6 block w-full rounded-md bg-blue-900 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Secure Your Spot</a>
+              <a href="https://www.sixthhousestudio.com/pages/yoga" target="_blank" rel="noopener noreferrer" className="mt-6 block w-full rounded-md bg-blue-900 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Secure Your Spot</a>
           </div>
           </div>
         </div>

@@ -32,16 +32,15 @@ export default function CTA() {
             
             <div className="mt-8 space-y-6">
               <div>
-                <p className="text-pretty text-lg/8 text-gray-500">
-                  In the spirit of aparigraha—non-possessiveness and radical accessibility—this class is offered on a &apos;Pay What You Can&apos; model. Your presence is the most valuable contribution. Simply arrive and offer what resonates with your heart and circumstances. For those who wish to secure their space, advance booking is also available.
-                </p>
+                <p className="mt-2 text-pretty text-lg/8 text-gray-500">In the spirit of aparigraha—non-possessiveness and radical accessibility—we offer our classes on a &apos;Pay What You Can&apos; model. Your presence is the most valuable contribution. Choose the contribution that resonates with your heart and circumstances directly when you book your spot.</p>
               </div>
             </div>
 
             <div className="mt-8 bg-gray-50 p-6 rounded-lg shadow-sm ring-1 ring-gray-900/5">
-              <h2 className="text-2xl font-semibold tracking-tight text-gray-900">VISIT OUR BOOKING PAGE</h2>
-              <p className="mt-2 text-sm text-gray-500">Space is limited to ensure a quality experience.</p>
-              <p className="mt-2 text-sm text-gray-500">Walk-ins are welcome for Pay What You Can. For advance booking, use the button below.</p>
+              <h2 className="text-2xl font-semibold tracking-tight text-gray-900">SECURE YOUR SPOT</h2>
+
+              <p className="mt-2 text-sm text-gray-500">Space is limited to ensure a quality experience for every practitioner.</p>
+
               <a href="https://www.sixthhousestudio.com/offerings/saturday-morning-vinyasa-97260f98-6c11-4b70-8dd4-52bac70122f9" target="_blank" rel="noopener noreferrer" className="mt-6 block w-full rounded-md bg-blue-900 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Secure Your Spot</a>
           </div>
           </div>

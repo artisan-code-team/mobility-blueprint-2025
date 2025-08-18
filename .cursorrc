@@ -1,0 +1,140 @@
+**context**
+
+* stack: next.js (app router), typescript, react 18, swc, eslint+prettier, stylelint, vitest/playwright.
+* default to server components; enable client only when interaction/stateful ui demands it.
+
+**always**
+
+* delete commented-out/unused code before merge.
+* read `/README.md` + `/docs/*` before changing structure or features.
+* prefer **ssr/ssg/isr** for initial html. if csr is required, reserve layout space to avoid cls (e.g., skeletons with fixed height/aspect).
+* keep one source of truth for utilities; use bundled helpers (e.g., lodash `merge|find|filter`) over new deps.
+* write small, readable functions with early returns; keep branches shallow.
+* add accessibility by default: valid roles, labels, focus order, keyboard nav.
+* add error boundaries/suspense for any async ui.
+* instrument: log errors (never swallow), surface user-safe toasts/messages.
+
+**prefer**
+
+* ssg/isr for cacheable pages; ssr for per-request personalized; csr only when necessary (live, highly interactive).
+* fetch on the server via `fetch()` in server components/route handlers; set `cache`, `next.revalidate`, `AbortController`.
+* colocate domain code: `/app`, `/components`, `/lib`, `/server`, `/styles`, `/types`.
+* composition over inheritance; pure utils; narrow module public surface.
+* deterministic ui: stable keys, controlled inputs, debounced searches.
+* test the contract not the implementation: vitest for units, playwright for core flows.
+* minimal deps; if a new dep saves <50 LOC and adds risk, skip it.
+
+**never**
+
+* deprecated apis or unstable flags without an issue link & sunset plan.
+* array index as react key (unless static, non-reorderable).
+* enqueue scripts/assets directly from `node_modules`.
+* duplicate a dependency already bundled by webpack/next.
+* `any`, non-null assertions `!`, or `@ts-ignore` without a comment + link.
+* mutable shared state across components; prefer props/context/store with clear boundaries.
+* leaking secrets in code, logs, or client bundles.
+
+**css/sass**
+
+* compile via sass; use variables/mixins; theme tokens live under `:root` or sass maps.
+* group rules per element/block; use cascade intentionally; avoid deep descendant chains.
+* prefer semantic selectors + structural pseudos (`:first-child`, `:last-child`, `:is()`) over brittle class soup.
+* only valid css values; `letter-spacing` **must not** use `%`.
+* prefer `position: sticky` vs js scroll handlers.
+* avoid layout jank: set explicit width/height/aspect for media.
+
+**javascript/next/react**
+
+* debounce/throttle search inputs; use `AbortController` to cancel fetches (never `setTimeout` hacks).
+* reference svg icons (sprite or `<use href>`), not inlined blobs per instance.
+* use `next/image`, `next/link`, and metadata api; no raw `<img>`/`<a>` unless justified.
+* server first: server components default; mark client comps with `"use client"`.
+* for csr data: prefer react-query/tanstack query or `use` + suspense; no ad-hoc globals.
+* wrap lists with stable keys; memoize heavy children; avoid `useEffect` as a data loader when server fetch is viable.
+* routing/data:
+
+  * static data → ssg (`export const revalidate = N`).
+  * semi-static → isr.
+  * per-user/session → ssr.
+  * live/interactive → csr with suspense.
+
+**typescript**
+
+* put shared types in `/types` or `/lib/types`; export only what’s public.
+* design-first types: define dto/domain types before implementation.
+* narrow return types; avoid `unknown` escape hatches; prefer discriminated unions.
+* review types before coding; fail builds on `any` or implicit `any`.
+
+**security/perf**
+
+* set headers: `Content-Security-Policy`, `X-Frame-Options`, `Referrer-Policy`, `Strict-Transport-Security`, `Permissions-Policy`.
+* block oversized bundles: fail build if any chunk > 200kb gz.
+* no client shipping of server-only secrets; verify with bundle analyzer.
+
+# enforcement pack (make it actually stick)
+
+**eslint essentials**
+
+* `react/jsx-key`: error
+* `no-console`: warn in dev, error in prod (allow `console.error`/`warn`)
+* `@typescript-eslint/no-explicit-any`: error
+* `@typescript-eslint/no-non-null-assertion`: error
+* `@typescript-eslint/ban-ts-comment`: \["error", {"ts-ignore": true}]
+* `react/no-array-index-key`: error
+* `import/no-extraneous-dependencies`: error
+* `no-warning-comments`: warn
+* `unicorn/prefer-query-selector`: warn (optional)
+* `@next/next/no-img-element`: error
+* `@next/next/no-html-link-for-pages`: error
+* custom rule to fail on commented-out code in diffs (see regex below)
+
+**stylelint**
+
+* `property-no-unknown`: true
+* `declaration-property-value-disallowed-list`: { "letter-spacing": \["/%\$/"] }
+* `selector-max-specificity`: "0,3,0"
+* `no-descending-specificity`: true
+
+**tsconfig (hardening)**
+
+* `"strict": true`
+* `"noImplicitAny": true`
+* `"noUncheckedIndexedAccess": true`
+* `"exactOptionalPropertyTypes": true`
+* `"noPropertyAccessFromIndexSignature": true`
+* `"moduleResolution": "bundler"`
+* `"verbatimModuleSyntax": true`
+
+**next config hints**
+
+* enable bundle analyzer in ci and fail on threshold.
+* default image domains; disable image unoptimized in prod.
+* route handlers set caching explicitly: `cache: "force-cache" | "no-store"`, `revalidate`.
+
+**pre-commit / ci gates**
+
+* run `eslint --max-warnings=0`, `stylelint`, `tsc --noEmit`, tests.
+* run a script that greps diffs for bad patterns.
+
+**regex/grep hints for reviews**
+
+* multi-line commented code (js/ts/tsx):
+
+  * `(?s)/\*[^*]*\*+(?:[^/*][^*]*\*+)*/`
+  * `^\s*//.*\n\s*//.*` (two+ consecutive `//` lines)
+* node\_modules enqueue (php/wordpress or misc):
+
+  * `enqueue.*node_modules`
+  * `from\s+['"].*node_modules/`
+* react index key:
+
+  * `key\s*=\s*{?\s*index\s*}?`
+* letter-spacing percent:
+
+  * `letter-spacing\s*:\s*[^;]*%`
+* ts ignores:
+
+  * `@ts-ignore`
+* non-null bang:
+
+  * `!\.` or `!\]` or `!;` (tune to `(?<![=])!` near identifiers)

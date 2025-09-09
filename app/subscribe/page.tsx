@@ -68,7 +68,7 @@ export default async function SubscribePage() {
                 {currentTier.spotsLeft > 0 ? (
                   <>Only {currentTier.spotsLeft} spots left at this price!</>
                 ) : (
-                  <>You're user #{currentTier.userNumber}</>
+                  <>You&apos;re user #{currentTier.userNumber}</>
                 )}
               </p>
               <p className="text-xs text-blue-600 mt-1">

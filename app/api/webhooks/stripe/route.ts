@@ -112,8 +112,8 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       subscriptionStatus: SubscriptionStatus.ACTIVE,
       pricingTier: tier,
       monthlyPriceCents,
-      subscriptionStart: new Date((subscription as any).current_period_start * 1000),
-      subscriptionEnd: new Date((subscription as any).current_period_end * 1000),
+      subscriptionStart: new Date(subscription.current_period_start * 1000),
+      subscriptionEnd: new Date(subscription.current_period_end * 1000),
     }
   })
 
@@ -124,9 +124,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       status: SubscriptionStatus.ACTIVE,
       tier,
       monthlyPriceCents,
-      currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-      currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
-      cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+      currentPeriodStart: new Date(subscription.current_period_start * 1000),
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
     },
     create: {
       userId: user.id,
@@ -135,9 +135,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       status: SubscriptionStatus.ACTIVE,
       tier,
       monthlyPriceCents,
-      currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-      currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
-      cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+      currentPeriodStart: new Date(subscription.current_period_start * 1000),
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
     }
   })
 }
@@ -159,7 +159,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     where: { id: user.id },
     data: {
       subscriptionStatus: SubscriptionStatus.CANCELED,
-      subscriptionEnd: new Date((subscription as any).current_period_end * 1000),
+      subscriptionEnd: new Date(subscription.current_period_end * 1000),
     }
   })
 
@@ -168,7 +168,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     where: { stripeSubscriptionId: subscription.id },
     data: {
       status: SubscriptionStatus.CANCELED,
-      currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
     }
   })
 }

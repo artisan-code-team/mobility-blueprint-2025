@@ -30,7 +30,7 @@ function Testimonial() {
 
 export function Hero() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
 
   const handlePracticeOnline = () => {
     if (status === 'loading') {

@@ -4,7 +4,6 @@ import { authConfig } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { stripe, getPriceIdForTier } from '@/lib/stripe'
 import { getCurrentPricingTier } from '@/lib/subscription'
-import { PricingTier } from '@prisma/client'
 
 export async function POST() {
   try {

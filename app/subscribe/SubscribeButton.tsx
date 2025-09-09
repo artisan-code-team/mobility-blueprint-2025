@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export function SubscribeButton() {
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
 
   const handleSubscribe = async () => {
     setIsLoading(true)

@@ -51,10 +51,10 @@ function SuccessContent() {
           </div>
 
           <div className="mt-8 pt-6 border-t border-slate-200">
-            <h3 className="font-semibold text-slate-900 mb-2">What's Next?</h3>
+            <h3 className="font-semibold text-slate-900 mb-2">What&apos;s Next?</h3>
             <ul className="text-sm text-slate-600 space-y-1">
               <li>• Explore your personalized dashboard</li>
-              <li>• Check out today's recommended exercises</li>
+              <li>• Check out today&apos;s recommended exercises</li>
               <li>• Start tracking your progress</li>
               <li>• Join our community for feedback and tips</li>
             </ul>

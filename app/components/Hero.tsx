@@ -3,7 +3,7 @@ import coverImage from '@/public/images/cover.jpg'
 import { useRouter } from 'next/navigation'
 import { Button } from './Button'
 import { StarRating } from './StarRating'
-// import { useSession } from 'next-auth/react'  // Commented out temporarily
+import { useSession } from 'next-auth/react'
 
 function Testimonial() {
   return (
@@ -30,16 +30,21 @@ function Testimonial() {
 
 export function Hero() {
   const router = useRouter()
-  // const { status } = useSession()  // Commented out temporarily
+  const { data: session, status } = useSession()
 
   const handlePracticeOnline = () => {
-    router.push('/coming-soon')
-    // Temporary solution - commenting out original functionality
-    // if (status === 'authenticated') {
-    //   router.push('/dashboard')
-    // } else {
-    //   router.push('/sign-in')
-    // }
+    if (status === 'loading') {
+      return // Don't do anything while loading
+    }
+    
+    if (status === 'authenticated') {
+      // User is logged in - send them to dashboard
+      // Dashboard will handle subscription check and redirect to /subscribe if needed
+      router.push('/dashboard')
+    } else {
+      // User is not logged in - send them to sign in
+      router.push('/sign-in')
+    }
   }
 
   return (
@@ -64,7 +69,12 @@ export function Hero() {
             </p>
             <div className="mt-8 flex gap-4">
               <Button color="blue" onClick={handlePracticeOnline}>
-                Practice online
+                {status === 'loading' 
+                  ? 'Loading...'
+                  : status === 'authenticated' 
+                  ? 'Go to Dashboard'
+                  : 'Start Your Journey'
+                }
               </Button>
               <Button
                 color="blue"

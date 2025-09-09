@@ -62,9 +62,20 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  
+  // Subscription fields
+  stripeCustomerId     String?   @unique
+  subscriptionStatus   SubscriptionStatus?
+  pricingTier          PricingTier?
+  monthlyPriceCents    Int?      
+  userNumber           Int?      @unique
+  subscriptionStart    DateTime?
+  subscriptionEnd      DateTime?
+  
   accounts      Account[]
   sessions      Session[]
   completions   ExerciseCompletion[]
+  subscriptions Subscription[]
 
   @@map("users")
 }
@@ -89,4 +100,35 @@ model ExerciseCompletion {
 
   @@unique([userId, exerciseId])
   @@map("exercise_completions")
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String
+  stripeSubscriptionId String   @unique
+  stripePriceId        String
+  status               SubscriptionStatus
+  tier                 PricingTier
+  monthlyPriceCents    Int
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE       // Subscription is active and paid
+  CANCELED     // User canceled (no longer has access)
+}
+
+enum PricingTier {
+  INNER_CIRCLE  // $1/month - Users 1-100
+  FOUNDER       // $5/month - Users 101-200  
+  PIONEER       // $10/month - Users 201-300
+  STANDARD      // $20/month - Users 301+
 } 

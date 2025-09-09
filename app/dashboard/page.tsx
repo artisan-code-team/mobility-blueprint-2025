@@ -32,14 +32,30 @@ export default async function Dashboard() {
     redirect('/sign-in')
   }
 
-  // Get the user ID from the database
+  // Get the user from the database 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true }
+    select: { 
+      id: true,
+      subscriptionStatus: true,
+      subscriptionEnd: true,
+      pricingTier: true
+    }
   })
 
   if (!user) {
     redirect('/sign-in')
+  }
+
+  // Check if user has an active subscription
+  const hasActiveSubscription = user.subscriptionStatus === 'ACTIVE' || 
+    (user.subscriptionStatus === 'CANCELED' && 
+     user.subscriptionEnd && 
+     user.subscriptionEnd > new Date())
+
+  // If no active subscription, redirect to subscribe page
+  if (!hasActiveSubscription) {
+    redirect('/subscribe')
   }
 
   return (

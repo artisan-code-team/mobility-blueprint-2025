@@ -105,6 +105,13 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   const tier = metadata.tier as PricingTier
   const monthlyPriceCents = parseInt(metadata.monthlyPriceCents || '0')
 
+  // Cast subscription to access period properties
+  const sub = subscription as Stripe.Subscription & {
+    current_period_start: number
+    current_period_end: number
+    cancel_at_period_end: boolean
+  }
+
   // Update user subscription status
   await prisma.user.update({
     where: { id: user.id },
@@ -112,8 +119,8 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       subscriptionStatus: SubscriptionStatus.ACTIVE,
       pricingTier: tier,
       monthlyPriceCents,
-      subscriptionStart: new Date(subscription.current_period_start * 1000),
-      subscriptionEnd: new Date(subscription.current_period_end * 1000),
+      subscriptionStart: new Date(sub.current_period_start * 1000),
+      subscriptionEnd: new Date(sub.current_period_end * 1000),
     }
   })
 
@@ -124,9 +131,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       status: SubscriptionStatus.ACTIVE,
       tier,
       monthlyPriceCents,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPeriodStart: new Date(sub.current_period_start * 1000),
+      currentPeriodEnd: new Date(sub.current_period_end * 1000),
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
     },
     create: {
       userId: user.id,
@@ -135,9 +142,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       status: SubscriptionStatus.ACTIVE,
       tier,
       monthlyPriceCents,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      currentPeriodStart: new Date(sub.current_period_start * 1000),
+      currentPeriodEnd: new Date(sub.current_period_end * 1000),
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
     }
   })
 }
@@ -154,12 +161,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return
   }
 
+  // Cast subscription to access period properties
+  const sub = subscription as Stripe.Subscription & {
+    current_period_end: number
+  }
+
   // Update user subscription status to canceled
   await prisma.user.update({
     where: { id: user.id },
     data: {
       subscriptionStatus: SubscriptionStatus.CANCELED,
-      subscriptionEnd: new Date(subscription.current_period_end * 1000),
+      subscriptionEnd: new Date(sub.current_period_end * 1000),
     }
   })
 
@@ -168,7 +180,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     where: { stripeSubscriptionId: subscription.id },
     data: {
       status: SubscriptionStatus.CANCELED,
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      currentPeriodEnd: new Date(sub.current_period_end * 1000),
     }
   })
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -63,6 +64,13 @@ export async function POST() {
     // Get the appropriate price ID for the current tier
     const priceId = getPriceIdForTier(currentTier.tier)
 
+    // Determine base URL for redirect callbacks
+    const headersList = await headers()
+    const protocol = headersList.get('x-forwarded-proto') ?? 'https'
+    const host = headersList.get('x-forwarded-host') ?? headersList.get('host')
+    const baseUrlEnv = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL
+    const baseUrl = baseUrlEnv || `${protocol}://${host}`
+
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -74,8 +82,8 @@ export async function POST() {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXTAUTH_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/subscription/canceled`,
+      success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/subscription/canceled`,
       subscription_data: {
         metadata: {
           userId: user.id,
@@ -96,8 +104,8 @@ export async function POST() {
       sessionId: checkoutSession.id 
     })
 
-  } catch (error) {
-    console.error('Checkout error:', error)
+  } catch (error: any) {
+    console.error('Checkout error:', error?.message || error)
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

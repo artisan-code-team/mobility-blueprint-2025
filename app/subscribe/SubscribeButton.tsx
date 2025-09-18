@@ -17,7 +17,12 @@ export function SubscribeButton() {
       })
 
       if (!response.ok) {
-        const error = await response.json()
+        if (response.status === 401) {
+          // Not signed in → send to sign-in and come back
+          window.location.href = `/sign-in?callbackUrl=${encodeURIComponent('/subscribe')}`
+          return
+        }
+        const error = await response.json().catch(() => ({ error: 'Failed to create checkout session' }))
         throw new Error(error.error || 'Failed to create checkout session')
       }
 

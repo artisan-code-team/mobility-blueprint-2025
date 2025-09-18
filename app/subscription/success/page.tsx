@@ -1,7 +1,4 @@
 import { Suspense } from 'react'
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
-import { authConfig } from '@/lib/auth'
 import Link from 'next/link'
 
 function SuccessContent() {
@@ -66,12 +63,6 @@ function SuccessContent() {
 }
 
 export default async function SubscriptionSuccess() {
-  const session = await getServerSession(authConfig)
-  
-  if (!session?.user?.email) {
-    redirect('/sign-in')
-  }
-
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-slate-100 flex items-center justify-center">

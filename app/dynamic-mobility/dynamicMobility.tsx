@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+/* */
 import { CheckCircleIcon } from "@heroicons/react/20/solid";
 import Link from "next/link";
 import Image from "next/image";

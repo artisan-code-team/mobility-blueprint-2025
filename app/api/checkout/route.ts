@@ -104,8 +104,9 @@ export async function POST() {
       sessionId: checkoutSession.id 
     })
 
-  } catch (error: any) {
-    console.error('Checkout error:', error?.message || error)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Checkout error:', message, error)
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

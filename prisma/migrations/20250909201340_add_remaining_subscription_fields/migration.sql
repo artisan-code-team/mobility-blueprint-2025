@@ -1,4 +1,4 @@
-d -- CreateEnum (only if not exists)
+-- CreateEnum (only if not exists)
 DO $$ BEGIN
     CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'CANCELED');
 EXCEPTION

@@ -84,6 +84,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       userNumber: parseInt(userNumber),
       pricingTier: tier,
       subscriptionStart: new Date(),
+      // Optimistic grant: mark as ACTIVE immediately after successful checkout.
+      // The subsequent customer.subscription.created/updated webhook will finalize period dates.
+      subscriptionStatus: SubscriptionStatus.ACTIVE,
     }
   })
 }

@@ -69,9 +69,20 @@ function SuccessContent() {
   )
 }
 
-export default async function SubscriptionSuccess({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
+type SearchParams = Record<string, string | string[]>
+type MaybePromise<T> = T | Promise<T>
+
+export default async function SubscriptionSuccess({ searchParams }: { searchParams?: MaybePromise<SearchParams> }) {
+  // Resolve Next.js 15 searchParams which may be a Promise
+  let resolvedSearchParams: SearchParams | undefined
+  if (searchParams && typeof searchParams === 'object' && 'then' in (searchParams as object)) {
+    resolvedSearchParams = await (searchParams as Promise<SearchParams>)
+  } else {
+    resolvedSearchParams = searchParams as SearchParams | undefined
+  }
+
   // Finalize subscription from Stripe session_id to avoid webhook timing issues (preview deploys)
-  const sessionId = typeof searchParams?.session_id === 'string' ? searchParams!.session_id : undefined
+  const sessionId = typeof resolvedSearchParams?.session_id === 'string' ? resolvedSearchParams.session_id : undefined
   if (sessionId) {
     try {
       const checkout = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['subscription'] })

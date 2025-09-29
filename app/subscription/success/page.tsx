@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authConfig } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { stripe } from '@/lib/stripe'
+import { PricingTier, SubscriptionStatus } from '@prisma/client'
 
 function SuccessContent() {
   return (
@@ -65,7 +68,64 @@ function SuccessContent() {
   )
 }
 
-export default async function SubscriptionSuccess() {
+export default async function SubscriptionSuccess({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
+  // Finalize subscription from Stripe session_id to avoid webhook timing issues (preview deploys)
+  const sessionId = typeof searchParams?.session_id === 'string' ? searchParams!.session_id : undefined
+  if (sessionId) {
+    try {
+      const checkout = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['subscription'] })
+      const metadata = checkout.metadata || {}
+      const userId = metadata.userId
+      const tier = metadata.tier as PricingTier | undefined
+      const monthlyPriceCents = parseInt(metadata.monthlyPriceCents || '0')
+
+      if (userId && checkout.status === 'complete') {
+        // Derive period dates from subscription if available
+        const sub = checkout.subscription as any
+        const currentPeriodStart = sub?.current_period_start ? new Date(sub.current_period_start * 1000) : new Date()
+        const currentPeriodEnd = sub?.current_period_end ? new Date(sub.current_period_end * 1000) : null
+
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            subscriptionStatus: SubscriptionStatus.ACTIVE,
+            pricingTier: tier,
+            monthlyPriceCents: monthlyPriceCents || undefined,
+            subscriptionStart: currentPeriodStart,
+            subscriptionEnd: currentPeriodEnd || undefined,
+          }
+        })
+
+        if (sub?.id) {
+          await prisma.subscription.upsert({
+            where: { stripeSubscriptionId: sub.id },
+            update: {
+              status: SubscriptionStatus.ACTIVE,
+              tier: (tier as PricingTier) || undefined,
+              monthlyPriceCents: monthlyPriceCents || 0,
+              currentPeriodStart,
+              currentPeriodEnd: currentPeriodEnd || currentPeriodStart,
+              cancelAtPeriodEnd: !!sub.cancel_at_period_end,
+            },
+            create: {
+              userId,
+              stripeSubscriptionId: sub.id,
+              stripePriceId: sub.items?.data?.[0]?.price?.id || 'unknown',
+              status: SubscriptionStatus.ACTIVE,
+              tier: (tier as PricingTier) || 'STANDARD',
+              monthlyPriceCents: monthlyPriceCents || 0,
+              currentPeriodStart,
+              currentPeriodEnd: currentPeriodEnd || currentPeriodStart,
+              cancelAtPeriodEnd: !!sub.cancel_at_period_end,
+            }
+          })
+        }
+      }
+    } catch (e) {
+      console.error('Finalize subscription from success page failed:', e)
+    }
+  }
+
   const session = await getServerSession(authConfig)
   if (!session?.user?.email) {
     redirect(`/sign-in?callbackUrl=${encodeURIComponent('/dashboard')}`)

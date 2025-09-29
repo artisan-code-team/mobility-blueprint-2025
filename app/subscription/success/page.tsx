@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { authConfig } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
+import Stripe from 'stripe'
 import { PricingTier, SubscriptionStatus } from '@prisma/client'
 
 function SuccessContent() {
@@ -81,7 +82,13 @@ export default async function SubscriptionSuccess({ searchParams }: { searchPara
 
       if (userId && checkout.status === 'complete') {
         // Derive period dates from subscription if available
-        const sub = checkout.subscription as any
+        const rawSub = checkout.subscription
+        type ExpandedSub = Stripe.Subscription & {
+          current_period_start: number
+          current_period_end: number
+          cancel_at_period_end: boolean
+        }
+        const sub: ExpandedSub | null = rawSub && typeof rawSub !== 'string' ? (rawSub as ExpandedSub) : null
         const currentPeriodStart = sub?.current_period_start ? new Date(sub.current_period_start * 1000) : new Date()
         const currentPeriodEnd = sub?.current_period_end ? new Date(sub.current_period_end * 1000) : null
 

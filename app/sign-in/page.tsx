@@ -48,10 +48,10 @@ export default function SignIn() {
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-6 shadow-lg">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-800">
-            Sign in to your account
+            Sign up or sign in
           </h2>
           <p className="mt-2 text-sm text-slate-600">
-            Enter your email to sign in or create an account
+            Enter your email to get started. We&apos;ll send you a magic link.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -85,7 +85,7 @@ export default function SignIn() {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? 'Sending link...' : 'Sign in with Email'}
+            {isLoading ? 'Sending link...' : 'Continue with Email'}
           </Button>
         </form>
       </div>

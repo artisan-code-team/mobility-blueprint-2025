@@ -17,16 +17,16 @@ export function SubscribeButton() {
       })
 
       if (!response.ok) {
-        if (response.status === 401) {
-          // Not signed in → send to sign-in and come back
-          window.location.href = `/sign-in?callbackUrl=${encodeURIComponent('/subscribe')}`
-          return
-        }
         const error = await response.json().catch(() => ({ error: 'Failed to create checkout session' }))
         throw new Error(error.error || 'Failed to create checkout session')
       }
 
-      const { checkoutUrl } = await response.json()
+      const data = await response.json()
+      const { checkoutUrl } = data
+      
+      if (!checkoutUrl) {
+        throw new Error('No checkout URL returned from API')
+      }
       
       // Redirect to Stripe checkout
       window.location.href = checkoutUrl

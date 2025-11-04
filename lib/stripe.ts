@@ -8,17 +8,23 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-07-30.basil',
 })
 
-// Stripe Price IDs for each tier
-export const STRIPE_PRICE_IDS = {
-  INNER_CIRCLE: 'price_1RMcyyH4S3TZB7VL1rEa0lyq', // $1/month - Users 1-100
-  FOUNDER: 'price_1RxcbQH4S3TZB7VLGiWB1tOu',      // $5/month - Users 101-200
-  PIONEER: 'price_1RxcdmH4S3TZB7VLHr1fyfg8',      // $10/month - Users 201-300
-  STANDARD: 'price_1RxceOH4S3TZB7VLTIyZA5vF',     // $20/month - Users 301+
+// Read Stripe Price IDs from env per environment. Set these in Vercel:
+// PREVIEW/DEV: use TEST prices. PRODUCTION: use LIVE prices.
+const PRICE_IDS_ENV = {
+  INNER_CIRCLE: process.env.STRIPE_PRICE_ID_INNER_CIRCLE,
+  FOUNDER: process.env.STRIPE_PRICE_ID_FOUNDER,
+  PIONEER: process.env.STRIPE_PRICE_ID_PIONEER,
+  STANDARD: process.env.STRIPE_PRICE_ID_STANDARD,
 } as const
 
-// Map pricing tiers to Stripe price IDs
-export function getPriceIdForTier(tier: 'INNER_CIRCLE' | 'FOUNDER' | 'PIONEER' | 'STANDARD'): string {
-  return STRIPE_PRICE_IDS[tier]
+export function getPriceIdForTier(
+  tier: 'INNER_CIRCLE' | 'FOUNDER' | 'PIONEER' | 'STANDARD'
+): string {
+  const priceId = PRICE_IDS_ENV[tier]
+  if (!priceId) {
+    throw new Error(`Missing Stripe Price ID for tier ${tier}. Set STRIPE_PRICE_ID_${tier} in env.`)
+  }
+  return priceId
 }
 
 // Webhook endpoint secret for verifying webhook signatures

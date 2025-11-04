@@ -6,10 +6,10 @@ import { prisma } from '@/lib/prisma'
 import { stripe, getPriceIdForTier } from '@/lib/stripe'
 import { getCurrentPricingTier } from '@/lib/subscription'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const headersList = await headers()
     const session = await getServerSession(authConfig)
-    
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -42,6 +42,30 @@ export async function POST() {
     // Create or retrieve Stripe customer
     let customerId = user.stripeCustomerId
     
+    // If customer ID exists, verify it exists in Stripe, otherwise try to find by email, then create
+    if (customerId) {
+      try {
+        await stripe.customers.retrieve(customerId)
+      } catch (error: any) {
+        if (error.code === 'resource_missing') {
+          console.log('Stripe customer not found by stored ID, attempting lookup by email')
+          try {
+            const list = await stripe.customers.list({ email: user.email || undefined, limit: 1 })
+            const found = list.data[0]
+            if (found?.id) {
+              customerId = found.id
+              await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } })
+              console.log('Linked existing Stripe customer by email:', customerId)
+            } else {
+              customerId = null // Fall through to creation
+            }
+          } catch (listErr) {
+            customerId = null
+          }
+        }
+      }
+    }
+    
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email!,
@@ -65,7 +89,6 @@ export async function POST() {
     const priceId = getPriceIdForTier(currentTier.tier)
 
     // Determine base URL for redirect callbacks
-    const headersList = await headers()
     const protocol = headersList.get('x-forwarded-proto') ?? 'https'
     const host = headersList.get('x-forwarded-host') ?? headersList.get('host')
     const baseUrlEnv = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL

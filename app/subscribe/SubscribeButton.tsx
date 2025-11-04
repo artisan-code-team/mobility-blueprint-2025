@@ -28,7 +28,7 @@ export function SubscribeButton() {
         throw new Error('No checkout URL returned from API')
       }
       
-      // Redirect to Stripe checkout
+      // Redirect to Stripe checkout for safe CC capture
       window.location.href = checkoutUrl
       
     } catch (error) {

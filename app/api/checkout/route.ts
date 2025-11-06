@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { stripe, getPriceIdForTier } from '@/lib/stripe'
 import { getCurrentPricingTier } from '@/lib/subscription'
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const headersList = await headers()
     const session = await getServerSession(authConfig)
@@ -46,8 +46,9 @@ export async function POST(request: Request) {
     if (customerId) {
       try {
         await stripe.customers.retrieve(customerId)
-      } catch (error: any) {
-        if (error.code === 'resource_missing') {
+      } catch (error: unknown) {
+        const stripeError = error as { code?: string }
+        if (stripeError.code === 'resource_missing') {
           console.log('Stripe customer not found by stored ID, attempting lookup by email')
           try {
             const list = await stripe.customers.list({ email: user.email || undefined, limit: 1 })
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
             } else {
               customerId = null // Fall through to creation
             }
-          } catch (listErr) {
+          } catch {
             customerId = null
           }
         }

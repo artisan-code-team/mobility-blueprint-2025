@@ -8,7 +8,7 @@ import { getCurrentPricingTier } from '@/lib/subscription'
 
 export async function POST() {
   try {
-    const headersList = headers()
+    const headersList = headers() as unknown as Awaited<ReturnType<typeof headers>>
     const session = await getServerSession(authConfig)
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

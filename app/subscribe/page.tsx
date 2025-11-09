@@ -90,8 +90,8 @@ export default async function SubscribePage() {
                   'Monthly progress reports and insights',
                   'Direct feedback channel for platform improvements',
                   'Lifetime access at your locked-in price'
-                ].map((feature, index) => (
-                  <li key={index} className="flex items-start">
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start">
                     <svg 
                       className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" 
                       fill="currentColor" 

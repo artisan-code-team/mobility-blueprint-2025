@@ -75,6 +75,17 @@ export default async function SubscriptionSuccess({ searchParams }: { searchPara
   // Resolve Next.js 15 searchParams (Promise in production builds)
   const resolvedSearchParams: SearchParams | undefined = searchParams ? await searchParams : undefined
 
+  const session = await getServerSession(authConfig)
+  if (!session?.user?.email) {
+    redirect(`/sign-in?callbackUrl=${encodeURIComponent('/dashboard')}`)
+  }
+
+  const authenticatedUser = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  })
+  const authenticatedUserId = authenticatedUser?.id
+
   // Finalize subscription from Stripe session_id to avoid webhook timing issues (preview deploys)
   const sessionId = typeof resolvedSearchParams?.session_id === 'string' ? resolvedSearchParams.session_id : undefined
   if (sessionId) {
@@ -85,7 +96,9 @@ export default async function SubscriptionSuccess({ searchParams }: { searchPara
       const tier = metadata.tier as PricingTier | undefined
       const monthlyPriceCents = parseInt(metadata.monthlyPriceCents || '0')
 
-      if (userId && checkout.status === 'complete') {
+      const isAuthorizedUser = Boolean(userId && authenticatedUserId && authenticatedUserId === userId)
+
+      if (userId && checkout.status === 'complete' && isAuthorizedUser) {
         // Derive period dates from subscription if available
         const rawSub = checkout.subscription
         type ExpandedSub = Stripe.Subscription & {
@@ -132,15 +145,15 @@ export default async function SubscriptionSuccess({ searchParams }: { searchPara
             }
           })
         }
+      } else if (userId && checkout.status === 'complete' && !isAuthorizedUser) {
+        console.warn('Authenticated user does not match checkout session user. Skipping subscription finalization.', {
+          authenticatedUserId,
+          checkoutUserId: userId,
+        })
       }
     } catch (e) {
       console.error('Finalize subscription from success page failed:', e)
     }
-  }
-
-  const session = await getServerSession(authConfig)
-  if (!session?.user?.email) {
-    redirect(`/sign-in?callbackUrl=${encodeURIComponent('/dashboard')}`)
   }
   return (
     <Suspense fallback={

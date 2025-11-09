@@ -1,3 +1,5 @@
+'use client'
+
 import Image from 'next/image'
 import coverImage from '@/public/images/cover.jpg'
 import { useRouter } from 'next/navigation'

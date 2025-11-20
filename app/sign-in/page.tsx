@@ -24,6 +24,12 @@ export default function SignIn() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Prevent submission if link has already been sent
+    if (linkSent) {
+      return
+    }
+    
     setIsLoading(true)
     setMessage(null)
     setLinkSent(false)
@@ -72,7 +78,7 @@ export default function SignIn() {
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoading || linkSent}
             />
           </div>
 

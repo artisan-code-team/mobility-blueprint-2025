@@ -38,7 +38,7 @@ export default function SignIn() {
       if (result?.error) {
         setMessage('Something went wrong. Please try again.')
       } else {
-        setMessage('Check your email for the login link!')
+        setMessage('Your access link is flowing to your inbox!')
         setLinkSent(true)
       }
     } finally {
@@ -51,10 +51,10 @@ export default function SignIn() {
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-6 shadow-lg">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-800">
-            Sign up or sign in
+            Unlock Your Practice
           </h2>
           <p className="mt-2 text-sm text-slate-600">
-            Enter your email to get started. We&apos;ll send you a magic link.
+            Enter your email to receive your secure link.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -84,7 +84,7 @@ export default function SignIn() {
 
           {linkSent ? (
             <div className="mt-2 text-sm text-slate-600 text-center py-2 px-4 rounded-md bg-slate-50 border border-slate-200">
-              Magic link sent! Please check your email.
+              Your access link is flowing to your inbox!
             </div>
           ) : (
             <Button
@@ -93,7 +93,7 @@ export default function SignIn() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Sending link...' : 'Continue with Email'}
+              {isLoading ? 'Sending secure link...' : 'Get My Access Link'}
             </Button>
           )}
         </form>

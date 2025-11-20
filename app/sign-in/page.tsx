@@ -8,23 +8,32 @@ export default function SignIn() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [linkSent, setLinkSent] = useState<boolean>(false)
 
   /**
    * Handles the email sign in form submission.
    * 
    * This function:
    * 1. Prevents default form submission
-   * 2. Shows loading state while request is in progress
-   * 3. Attempts to sign in using the provided email address
-   * 4. Displays success/error message based on the result
-   * 5. Redirects to dashboard on successful authentication
+   * 2. Prevents submission if a link has already been sent successfully
+   * 3. Shows loading state while request is in progress
+   * 4. Attempts to sign in using the provided email address
+   * 5. Displays success/error message based on the result
+   * 6. Sets linkSent state to true on successful link send
    * 
    * @param e - The form submission event
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Prevent submission if link has already been sent
+    if (linkSent) {
+      return
+    }
+    
     setIsLoading(true)
     setMessage(null)
+    setLinkSent(false)
 
     try {
       const result = await signIn('email', {
@@ -36,7 +45,8 @@ export default function SignIn() {
       if (result?.error) {
         setMessage('Something went wrong. Please try again.')
       } else {
-        setMessage('Check your email for the login link!')
+        setMessage('Your access link is flowing to your inbox!')
+        setLinkSent(true)
       }
     } finally {
       setIsLoading(false)
@@ -48,10 +58,10 @@ export default function SignIn() {
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-6 shadow-lg">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-800">
-            Sign up or sign in
+            Unlock Your Practice
           </h2>
           <p className="mt-2 text-sm text-slate-600">
-            Enter your email to get started. We&apos;ll send you a magic link.
+            Enter your email to receive your secure link.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -69,24 +79,32 @@ export default function SignIn() {
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoading || linkSent}
+              aria-disabled={linkSent}
             />
           </div>
 
           {message && (
-            <p className="mt-2 text-sm text-slate-600 text-center">
+            <p 
+              className="mt-2 text-sm text-slate-600 text-center"
+              role={linkSent ? "status" : "alert"}
+              aria-live={linkSent ? "polite" : "assertive"}
+              aria-atomic="true"
+            >
               {message}
             </p>
           )}
 
-          <Button
-            type="submit"
-            color="blue"
-            className="w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Sending link...' : 'Continue with Email'}
-          </Button>
+          {!linkSent && (
+            <Button
+              type="submit"
+              color="blue"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Sending secure link...' : 'Get My Access Link'}
+            </Button>
+          )}
         </form>
       </div>
     </div>

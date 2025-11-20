@@ -15,10 +15,11 @@ export default function SignIn() {
    * 
    * This function:
    * 1. Prevents default form submission
-   * 2. Shows loading state while request is in progress
-   * 3. Attempts to sign in using the provided email address
-   * 4. Displays success/error message based on the result
-   * 5. Redirects to dashboard on successful authentication
+   * 2. Prevents submission if a link has already been sent successfully
+   * 3. Shows loading state while request is in progress
+   * 4. Attempts to sign in using the provided email address
+   * 5. Displays success/error message based on the result
+   * 6. Sets linkSent state to true on successful link send
    * 
    * @param e - The form submission event
    */

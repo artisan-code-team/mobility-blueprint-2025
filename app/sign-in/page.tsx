@@ -79,6 +79,7 @@ export default function SignIn() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading || linkSent}
+              aria-disabled={linkSent}
             />
           </div>
 

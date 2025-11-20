@@ -83,7 +83,12 @@ export default function SignIn() {
           </div>
 
           {message && (
-            <p className="mt-2 text-sm text-slate-600 text-center">
+            <p 
+              className="mt-2 text-sm text-slate-600 text-center"
+              role={linkSent ? "status" : "alert"}
+              aria-live={linkSent ? "polite" : "assertive"}
+              aria-atomic="true"
+            >
               {message}
             </p>
           )}

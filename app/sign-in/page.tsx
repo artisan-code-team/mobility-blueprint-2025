@@ -82,11 +82,7 @@ export default function SignIn() {
             </p>
           )}
 
-          {linkSent ? (
-            <div className="mt-2 text-sm text-slate-600 text-center py-2 px-4 rounded-md bg-slate-50 border border-slate-200">
-              Your access link is flowing to your inbox!
-            </div>
-          ) : (
+          {!linkSent && (
             <Button
               type="submit"
               color="blue"

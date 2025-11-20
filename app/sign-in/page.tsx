@@ -8,7 +8,7 @@ export default function SignIn() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const [linkSent, setLinkSent] = useState(false)
+  const [linkSent, setLinkSent] = useState<boolean>(false)
 
   /**
    * Handles the email sign in form submission.

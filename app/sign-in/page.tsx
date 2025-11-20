@@ -8,6 +8,7 @@ export default function SignIn() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [linkSent, setLinkSent] = useState(false)
 
   /**
    * Handles the email sign in form submission.
@@ -25,6 +26,7 @@ export default function SignIn() {
     e.preventDefault()
     setIsLoading(true)
     setMessage(null)
+    setLinkSent(false)
 
     try {
       const result = await signIn('email', {
@@ -37,6 +39,7 @@ export default function SignIn() {
         setMessage('Something went wrong. Please try again.')
       } else {
         setMessage('Check your email for the login link!')
+        setLinkSent(true)
       }
     } finally {
       setIsLoading(false)
@@ -79,14 +82,20 @@ export default function SignIn() {
             </p>
           )}
 
-          <Button
-            type="submit"
-            color="blue"
-            className="w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Sending link...' : 'Continue with Email'}
-          </Button>
+          {linkSent ? (
+            <div className="mt-2 text-sm text-slate-600 text-center py-2 px-4 rounded-md bg-slate-50 border border-slate-200">
+              Magic link sent! Please check your email.
+            </div>
+          ) : (
+            <Button
+              type="submit"
+              color="blue"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Sending link...' : 'Continue with Email'}
+            </Button>
+          )}
         </form>
       </div>
     </div>

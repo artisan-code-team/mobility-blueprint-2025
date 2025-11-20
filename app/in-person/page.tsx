@@ -80,7 +80,7 @@ export default function InPersonPage() {
 
             <div className="mt-8 text-center">
               <p className="text-xl text-slate-600">
-                Live classes are currently held at the North Little Rock Athletic Club
+                Live classes are currently held at the Genesis Health Club in North Little Rock
               </p>
 
               <p className="mt-6 text-xl text-slate-600">
@@ -92,12 +92,12 @@ export default function InPersonPage() {
               </p>
 
               <Link
-                href="https://www.nlrac.com"
+                href="https://www.genesishealthclubs.com/locations/north-little-rock.html"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-8 inline-block text-lg font-semibold text-blue-600 hover:text-blue-500"
               >
-                FIND OUT MORE ABOUT NLRAC →
+                FIND OUT MORE ABOUT GENESIS HEALTH CLUB →
               </Link>
             </div>
           </div>

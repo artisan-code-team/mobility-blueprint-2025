@@ -41,7 +41,7 @@ export default function CTA() {
 
               <p className="mt-2 text-sm text-gray-500">Space is limited to ensure a quality experience for every practitioner.</p>
 
-              <a href="https://www.sixthhousestudio.com/offerings/saturday-morning-vinyasa-97260f98-6c11-4b70-8dd4-52bac70122f9" target="_blank" rel="noopener noreferrer" className="mt-6 block w-full rounded-md bg-blue-900 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Secure Your Spot</a>
+              <a href="https://www.sixthhousestudio.com/pages/yoga" target="_blank" rel="noopener noreferrer" className="mt-6 block w-full rounded-md bg-blue-900 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Secure Your Spot</a>
           </div>
           </div>
         </div>

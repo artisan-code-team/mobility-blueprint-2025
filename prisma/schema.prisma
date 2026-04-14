@@ -72,10 +72,12 @@ model User {
   subscriptionStart    DateTime?
   subscriptionEnd      DateTime?
   
-  accounts      Account[]
-  sessions      Session[]
-  completions   ExerciseCompletion[]
-  subscriptions Subscription[]
+  accounts       Account[]
+  sessions       Session[]
+  completions    ExerciseCompletion[]
+  subscriptions  Subscription[]
+  ledSessions    GroupSession[]         @relation("SessionLeader")
+  participations SessionParticipant[]
 
   @@map("users")
 }
@@ -131,4 +133,38 @@ enum PricingTier {
   FOUNDER       // $5/month - Users 101-200  
   PIONEER       // $10/month - Users 201-300
   STANDARD      // $20/month - Users 301+
-} 
+}
+
+enum SessionStatus {
+  LOBBY
+  ACTIVE
+  COMPLETED
+}
+
+model GroupSession {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  leaderId     String
+  exerciseIds  String[]
+  status       SessionStatus @default(LOBBY)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  leader       User                 @relation("SessionLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  participants SessionParticipant[]
+
+  @@map("group_sessions")
+}
+
+model SessionParticipant {
+  id        String   @id @default(cuid())
+  userId    String
+  sessionId String
+  joinedAt  DateTime @default(now())
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session GroupSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionId])
+  @@map("session_participants")
+}

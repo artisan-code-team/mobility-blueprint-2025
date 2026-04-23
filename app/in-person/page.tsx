@@ -38,6 +38,57 @@ export default function InPersonPage() {
           <h1 className="text-center text-4xl font-bold tracking-tight text-slate-900">
             LIVE CLASSES
           </h1>
+          <p className="mx-auto mt-6 max-w-3xl text-center text-lg leading-relaxed text-slate-600">
+            A simple way to think about the week: <strong className="font-semibold text-slate-800">Monday, Wednesday, and Friday</strong> are how
+            we tune the instrument, and <strong className="font-semibold text-slate-800">Saturday</strong> is the symphony.
+          </p>
+          <p className="mx-auto mt-4 max-w-3xl text-center text-lg leading-relaxed text-slate-600">
+            The classes below are all levels, and all of them are available in person, or live online.
+          </p>
+
+          <div className="mt-16 border-t border-slate-200 pt-16">
+            <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
+              MOBILITY BLUEPRINT LIVE
+            </h2>
+
+            <p className="mt-6 text-center text-lg leading-relaxed text-slate-600">
+              These weekday sessions are where we do the deep, quiet work in the connective tissue. We
+              use the &ldquo;Science of Yoga&rdquo; to unlock the fascia, hydrate the joints, and build the
+              specific stability that Saturday demands.
+            </p>
+
+            <div className="mt-8 text-center">
+              <p className="text-xl text-slate-600">
+                In person at{' '}
+                <a
+                  href="https://maps.app.goo.gl/Pcc69EiJfLoDzMMh9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-500 hover:underline"
+                >
+                  Sixth House Wellness Studio
+                </a>
+                , Little Rock
+              </p>
+
+              <p className="mt-6 text-xl text-slate-600">
+                Monday, Wednesday, & Friday
+              </p>
+
+              <p className="mt-2 text-xl text-slate-600">
+                8:00am - 8:45am
+              </p>
+
+              <Link
+                href="https://www.sixthhousestudio.com/pages/yoga"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-8 inline-block text-lg font-semibold text-blue-600 hover:text-blue-500"
+              >
+                FIND OUT MORE ON THE SIXTH HOUSE YOGA PAGE →
+              </Link>
+            </div>
+          </div>
 
           <div className="mt-16 border-t border-slate-200 pt-16">
             <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
@@ -45,7 +96,10 @@ export default function InPersonPage() {
             </h2>
 
             <p className="mt-6 text-center text-lg leading-relaxed text-slate-600">
-              By enhancing traditional yoga with a focus on the myofascial meridians, this program brings many benefits to the body. But, most of all, it is a lively and engaging flow that will leave you feeling invigorated!
+              Saturday is the pinnacle: a vinyasa practice that weaves in myofascial work so the whole body
+              moves as one. Lively, full, and the kind of class that leaves you clear-headed and
+              energized—an ideal bookend to the week. Join live in person or live online, follow the link
+              below for schedule and details.
             </p>
 
             <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -63,41 +117,6 @@ export default function InPersonPage() {
                 className="inline-block text-lg font-semibold text-blue-600 hover:text-blue-500"
               >
                 LEARN MORE ABOUT SATURDAY VINYASA →
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-16 border-t border-slate-200 pt-16">
-            <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
-              DYNAMIC MOBILITY FOR LONGEVITY
-            </h2>
-
-            <p className="mt-6 text-center text-lg leading-relaxed text-slate-600">
-              This particular class is a 45 minute version of the online sessions. 
-              We leave out the Cardio Peak section & alternate the Flow & Strength sections. 
-              It is an all levels class with a focus on getting the most out of life at any age.
-            </p>
-
-            <div className="mt-8 text-center">
-              <p className="text-xl text-slate-600">
-                Live classes are currently held at the Genesis Health Club in North Little Rock
-              </p>
-
-              <p className="mt-6 text-xl text-slate-600">
-                Monday, Wednesday, & Friday
-              </p>
-
-              <p className="mt-2 text-xl text-slate-600">
-                7:30am - 8:15am
-              </p>
-
-              <Link
-                href="https://www.genesishealthclubs.com/locations/north-little-rock.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-8 inline-block text-lg font-semibold text-blue-600 hover:text-blue-500"
-              >
-                FIND OUT MORE ABOUT GENESIS HEALTH CLUB →
               </Link>
             </div>
           </div>

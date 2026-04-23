@@ -83,7 +83,7 @@ export function Hero() {
                 variant="outline"
                 href="/in-person"
               >
-                Practice in person
+                Live classes
               </Button>
             </div>
           </div>

@@ -2,7 +2,20 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getSuggestedExercises } from '@/lib/sessions/suggestions'
+import { getEligibleExercises } from '@/lib/sessions/suggestions'
+
+const CATEGORY_TARGET = 5
+
+function pickCategory(
+  exercises: { id: string; category: string }[],
+  category: string,
+  targetCount: number,
+): string[] {
+  return exercises
+    .filter((exercise) => exercise.category.toLowerCase() === category)
+    .slice(0, targetCount)
+    .map((exercise) => exercise.id)
+}
 
 export async function POST(request: Request) {
   const session = await getServerSession(authConfig)
@@ -46,28 +59,43 @@ export async function POST(request: Request) {
 
     const participantIds = groupSession.participants.map((p) => p.userId)
 
-    // Get each participant's suggested exercises and intersect
-    const suggestionSets = await Promise.all(
+    // Intersect each participant's full eligible pool (not randomized daily picks)
+    // so we can reliably build a larger common plan.
+    const eligibleSets = await Promise.all(
       participantIds.map(async (uid) => {
-        const exercises = await getSuggestedExercises(uid)
+        const exercises = await getEligibleExercises(uid)
         return new Set(exercises.map((e) => e.id))
       }),
     )
 
-    let commonIds: Set<string> = suggestionSets[0]
-    for (let i = 1; i < suggestionSets.length; i++) {
-      commonIds = new Set([...commonIds].filter((id) => suggestionSets[i].has(id)))
+    let commonIds: Set<string> = eligibleSets[0] ?? new Set<string>()
+    for (let i = 1; i < eligibleSets.length; i++) {
+      commonIds = new Set([...commonIds].filter((id) => eligibleSets[i].has(id)))
     }
 
-    let exerciseIds = [...commonIds]
+    const commonExercises = await prisma.exercise.findMany({
+      where: { id: { in: [...commonIds] } },
+      select: {
+        id: true,
+        category: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    })
 
-    // Fallback: if no common exercises, use the leader's restorative suggestions
+    let exerciseIds = [
+      ...pickCategory(commonExercises, 'conditioning', CATEGORY_TARGET),
+      ...pickCategory(commonExercises, 'restorative', CATEGORY_TARGET),
+    ]
+
+    // Fallback: if the common pool is empty, use the leader's eligible restorative flow.
     if (exerciseIds.length === 0) {
-      const leaderSuggestions = await getSuggestedExercises(user.id)
-      const restorative = leaderSuggestions.filter(
-        (e) => e.category.toLowerCase() === 'restorative',
-      )
-      exerciseIds = restorative.map((e) => e.id)
+      const leaderEligible = await getEligibleExercises(user.id)
+      exerciseIds = leaderEligible
+        .filter((e) => e.category.toLowerCase() === 'restorative')
+        .slice(0, CATEGORY_TARGET)
+        .map((e) => e.id)
     }
 
     const updated = await prisma.groupSession.update({

@@ -46,3 +46,28 @@ export async function getSuggestedExercises(userId: string): Promise<SuggestedEx
     ORDER BY category, name;
   `
 }
+
+/**
+ * Returns all exercises the user is eligible for today (not completed
+ * in the last month), in random order.
+ */
+export async function getEligibleExercises(userId: string): Promise<SuggestedExercise[]> {
+  return prisma.$queryRaw<SuggestedExercise[]>`
+    SELECT
+      e.id,
+      e.name,
+      e.description,
+      e."imageUrl",
+      e.category,
+      e."subCategory"
+    FROM exercises e
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM exercise_completions ec
+      WHERE e.id = ec."exerciseId"
+      AND ec."userId" = ${userId}
+      AND ec."createdAt" >= NOW() - INTERVAL '1 month'
+    )
+    ORDER BY random();
+  `
+}

@@ -44,18 +44,11 @@ export async function POST(request: Request) {
     }
 
     const participantIds = groupSession.participants.map((p) => p.userId)
-    const oneMonthAgo = new Date()
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
-    // For each participant, delete stale completions then create fresh ones.
-    // This mirrors the pattern in /api/exercises/complete.
+    // Group session may include moves someone already completed this month; we still
+    // write a row for every participant so the completion date "bumps" forward.
     for (const userId of participantIds) {
       for (const exerciseId of groupSession.exerciseIds) {
-        const recent = await prisma.exerciseCompletion.findFirst({
-          where: { userId, exerciseId, createdAt: { gte: oneMonthAgo } },
-        })
-        if (recent) continue
-
         await prisma.exerciseCompletion.deleteMany({
           where: { userId, exerciseId },
         })

@@ -39,7 +39,7 @@ export function Author() {
               <span className="block text-blue-900">Shaun Hartman</span>
             </h3>
             <p className="mt-4 text-lg tracking-tight text-slate-800">
-              I’ve been designing this practice for 7 years. I have been
+              I’ve been designing this practice for 8 years. I have been
               incorporating it into an extremely busy schedule with a demanding
               40 hour per week job and 3 kids that need my utmost attention
               while also finding time for personal expression through art and

@@ -70,6 +70,18 @@ export default async function Dashboard() {
 
         <DailySuggestions userId={user.id} />
 
+        <Link
+          href="/sessions"
+          className="mb-8 block rounded-lg border border-blue-200 bg-blue-50 p-6 shadow-sm transition-all hover:shadow-md"
+        >
+          <h2 className="text-xl font-semibold text-blue-900">
+            Group Sessions
+          </h2>
+          <p className="mt-2 text-sm text-blue-700">
+            Start or join a &ldquo;Common Ground&rdquo; session to practice with others using a shared exercise plan.
+          </p>
+        </Link>
+
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {categories.map((category) => (
             <Link

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "qa:video": "node scripts/qa-video.mjs",
+    "qa:video:pr": "node scripts/qa-video-from-pr.mjs",
     "qa:video:install": "playwright install chromium",
     "postinstall": "prisma generate"
   },

@@ -110,6 +110,52 @@ Example with PR comment:
 QA_POST_GH_PR_COMMENT=1 npm run qa:video -- --label pr-happy-path
 ```
 
+### Running Against Vercel Preview (recommended)
+
+To avoid local-machine drift, run against a Vercel preview URL:
+
+```bash
+QA_BASE_URL="https://your-preview-url.vercel.app" npm run qa:video -- --label pr-preview
+```
+
+The script now resolves base URL in this order:
+
+1. `--base-url`
+2. `QA_BASE_URL`
+3. `QA_VERCEL_PREVIEW_URL`
+4. `VERCEL_BRANCH_URL`
+5. `VERCEL_URL`
+
+If it resolves to `localhost`, it fails by default. For intentional local debugging only:
+
+```bash
+npm run qa:video -- --allow-localhost --label local-debug
+```
+
+### PR-Aware Command (Auto Vercel Preview)
+
+If your branch already has an open PR and Vercel has posted its preview comment:
+
+```bash
+npm run qa:video:pr
+```
+
+This command:
+
+- Resolves the PR associated with the current branch via `gh`.
+- Parses the latest Vercel PR comment for the preview URL.
+- Runs `qa:video` against that preview URL automatically.
+
+Optional passthrough args:
+
+```bash
+npm run qa:video:pr -- --label checkout-smoke
+```
+
+Cursor slash command:
+
+- `/create-qa-video` runs this same PR-aware flow.
+
 ## Database Management
 
 The project uses Prisma with PostgreSQL for data management. Key commands:

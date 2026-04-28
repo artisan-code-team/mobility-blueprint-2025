@@ -16,9 +16,10 @@ function timestamp() {
 
 function parseArgs(argv) {
   const parsed = {
-    baseUrl: process.env.QA_BASE_URL || "http://127.0.0.1:3000",
+    baseUrl: "",
     label: "happy-path",
     keepTmp: false,
+    allowLocalhost: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -36,9 +37,46 @@ function parseArgs(argv) {
     if (arg === "--keep-tmp") {
       parsed.keepTmp = true;
     }
+    if (arg === "--allow-localhost") {
+      parsed.allowLocalhost = true;
+    }
   }
 
   return parsed;
+}
+
+function normalizeUrl(value) {
+  if (!value) return "";
+  const trimmed = String(value).trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+function isLocalUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function resolveBaseUrl(args) {
+  const candidates = [
+    args.baseUrl,
+    process.env.QA_BASE_URL,
+    process.env.QA_VERCEL_PREVIEW_URL,
+    process.env.VERCEL_BRANCH_URL,
+    process.env.VERCEL_URL,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeUrl(candidate);
+    if (normalized) return normalized;
+  }
+
+  return "http://127.0.0.1:3000";
 }
 
 function runCommand(command, args, env = process.env) {
@@ -181,6 +219,15 @@ async function findNewestWebm(directory) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  args.baseUrl = resolveBaseUrl(args);
+  if (isLocalUrl(args.baseUrl) && !args.allowLocalhost) {
+    throw new Error(
+      `Resolved QA base URL is local (${args.baseUrl}). ` +
+        "Set QA_BASE_URL/QA_VERCEL_PREVIEW_URL (or pass --base-url) to your Vercel preview URL. " +
+        "Use --allow-localhost only for intentional local debugging."
+    );
+  }
+
   const tmpRoot = await mkdtemp(path.join(tmpdir(), "qa-video-"));
   const tmpSpecPath = path.join(tmpRoot, "happy-path.spec.ts");
   const tmpConfigPath = path.join(tmpRoot, "playwright.temp.config.ts");

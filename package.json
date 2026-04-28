@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "qa:video": "node scripts/qa-video.mjs",
+    "qa:video:install": "playwright install chromium",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -38,6 +40,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.11",
+    "playwright": "^1.59.1",
     "postcss": "^8",
     "prisma": "^6.14.0",
     "tailwindcss": "^3.4.1",

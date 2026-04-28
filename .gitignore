@@ -42,3 +42,6 @@ next-env.d.ts
 
 # misc
 /time-log
+/artifacts/qa-videos
+qa-video-result-*.json
+qa-video-upload-result.json

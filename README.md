@@ -69,6 +69,47 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## QA Video Workflow (Playwright)
+
+This repo now includes a lightweight "happy path to video" flow inspired by `/qa-video`.
+
+1. Install Playwright browser binaries:
+
+```bash
+npm run qa:video:install
+```
+
+2. Start your app locally:
+
+```bash
+npm run dev
+```
+
+3. In another terminal, run the QA video flow:
+
+```bash
+npm run qa:video -- --base-url http://127.0.0.1:3000 --label homepage-flow
+```
+
+What it does:
+
+- Generates a temporary Playwright spec on the fly.
+- Runs a deterministic happy-path flow in Chromium.
+- Records a `.webm` video in `artifacts/qa-videos/...`.
+- Optionally uploads and comments on PR/Jira (see env vars below).
+
+Optional integrations:
+
+- `QA_VIDEO_UPLOAD_COMMAND`: shell command that uploads `VIDEO_PATH` and writes JSON to `OUTPUT_JSON` containing `{ "url": "..." }`.
+- `QA_POST_GH_PR_COMMENT=1`: if set, runs `gh pr comment --body ...`.
+- `QA_JIRA_COMMENT_ENDPOINT`: if set, POSTs `{ text, label }` as JSON to this endpoint.
+
+Example with PR comment:
+
+```bash
+QA_POST_GH_PR_COMMENT=1 npm run qa:video -- --label pr-happy-path
+```
+
 ## Database Management
 
 The project uses Prisma with PostgreSQL for data management. Key commands:

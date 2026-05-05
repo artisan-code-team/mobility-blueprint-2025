@@ -8,6 +8,17 @@ const CATEGORY_TARGET = 5
 
 type CategoryKey = 'conditioning' | 'restorative'
 
+type ExerciseRow = {
+  id: string
+  name: string
+  category: string
+  subCategory: string | null
+}
+
+function subCategoryKey(subCategory: string | null): string {
+  return subCategory ?? ''
+}
+
 /**
  * For each exercise id, how many participants are still "due" for it
  * (not completed in the last month — i.e. in that user's eligible set).
@@ -22,26 +33,65 @@ function buildNeedCounts(eligibleSets: Set<string>[]): Map<string, number> {
   return counts
 }
 
+function compareByNeed(
+  a: ExerciseRow,
+  b: ExerciseRow,
+  needCounts: Map<string, number>,
+): number {
+  const na = needCounts.get(a.id) ?? 0
+  const nb = needCounts.get(b.id) ?? 0
+  if (nb !== na) return nb - na
+  return a.name.localeCompare(b.name)
+}
+
 /**
- * From the union of all participants' eligible exercises, take up to `target`
- * in `category` with highest need-count first, then name.
+ * Up to `target` exercises in `category`: pick the best match per subCategory
+ * (highest group need count, then name), order those by need count, take up to
+ * `target`, then fill any remaining slots from the rest of the category.
  */
-function pickTopByCategory(
-  exercises: { id: string; name: string; category: string }[],
+function pickBalancedBySubcategory(
+  exercises: ExerciseRow[],
   needCounts: Map<string, number>,
   category: CategoryKey,
   target: number,
 ): string[] {
-  return exercises
-    .filter((e) => e.category.toLowerCase() === category)
-    .sort((a, b) => {
-      const na = needCounts.get(a.id) ?? 0
-      const nb = needCounts.get(b.id) ?? 0
-      if (nb !== na) return nb - na
-      return a.name.localeCompare(b.name)
-    })
-    .slice(0, target)
-    .map((e) => e.id)
+  const inCategory = exercises.filter((e) => e.category.toLowerCase() === category)
+  const selected = new Set<string>()
+  const result: string[] = []
+
+  const bySub = new Map<string, ExerciseRow[]>()
+  for (const e of inCategory) {
+    const key = subCategoryKey(e.subCategory)
+    if (!bySub.has(key)) bySub.set(key, [])
+    bySub.get(key)!.push(e)
+  }
+
+  const cmp = (a: ExerciseRow, b: ExerciseRow) => compareByNeed(a, b, needCounts)
+
+  const winners: ExerciseRow[] = []
+  for (const group of bySub.values()) {
+    const sorted = [...group].sort(cmp)
+    winners.push(sorted[0]!)
+  }
+
+  winners.sort(cmp)
+
+  for (const w of winners) {
+    if (result.length >= target) break
+    if (!selected.has(w.id)) {
+      selected.add(w.id)
+      result.push(w.id)
+    }
+  }
+
+  const rest = inCategory.filter((e) => !selected.has(e.id)).sort(cmp)
+
+  for (const e of rest) {
+    if (result.length >= target) break
+    result.push(e.id)
+  }
+
+  return result
 }
 
 export async function POST(request: Request) {
@@ -101,17 +151,17 @@ export async function POST(request: Request) {
     if (unionIds.size > 0) {
       const pool = await prisma.exercise.findMany({
         where: { id: { in: [...unionIds] } },
-        select: { id: true, name: true, category: true },
+        select: { id: true, name: true, category: true, subCategory: true },
       })
 
       exerciseIds = [
-        ...pickTopByCategory(
+        ...pickBalancedBySubcategory(
           pool,
           needCounts,
           'conditioning',
           CATEGORY_TARGET,
         ),
-        ...pickTopByCategory(
+        ...pickBalancedBySubcategory(
           pool,
           needCounts,
           'restorative',
@@ -124,10 +174,22 @@ export async function POST(request: Request) {
     if (exerciseIds.length === 0) {
       const leaderId = groupSession.leaderId
       const leaderEligible = await getEligibleExercises(leaderId)
-      exerciseIds = leaderEligible
-        .filter((e) => e.category.toLowerCase() === 'restorative')
-        .slice(0, CATEGORY_TARGET)
-        .map((e) => e.id)
+      const leaderNeed = new Map<string, number>()
+      for (const e of leaderEligible) {
+        leaderNeed.set(e.id, 1)
+      }
+      const leaderPool: ExerciseRow[] = leaderEligible.map((e) => ({
+        id: e.id,
+        name: e.name,
+        category: e.category,
+        subCategory: e.subCategory,
+      }))
+      exerciseIds = pickBalancedBySubcategory(
+        leaderPool,
+        leaderNeed,
+        'restorative',
+        CATEGORY_TARGET,
+      )
     }
 
     const updated = await prisma.groupSession.update({

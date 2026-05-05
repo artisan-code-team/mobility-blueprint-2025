@@ -13,8 +13,7 @@ interface SuggestedExercise {
  * Returns one random un-completed exercise per category/subcategory group
  * for the given user, excluding anything completed in the last month.
  *
- * This is the same query used by the DailySuggestions server component,
- * extracted here so it can be reused by the group-session intersection logic.
+ * This is the same query used by the DailySuggestions server component.
  */
 export async function getSuggestedExercises(userId: string): Promise<SuggestedExercise[]> {
   return prisma.$queryRaw<SuggestedExercise[]>`
@@ -48,8 +47,9 @@ export async function getSuggestedExercises(userId: string): Promise<SuggestedEx
 }
 
 /**
- * Returns all exercises the user is eligible for today (not completed
- * in the last month), in random order.
+ * All exercises the user is eligible for (not completed in the last month),
+ * in random order. Used for group plan generation so the leader algorithm can
+ * intersect full participant pools and pick per subcategory.
  */
 export async function getEligibleExercises(userId: string): Promise<SuggestedExercise[]> {
   return prisma.$queryRaw<SuggestedExercise[]>`

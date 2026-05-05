@@ -20,7 +20,7 @@ function subCategoryKey(subCategory: string | null): string {
 }
 
 /**
- * For each exercise id, how many participants are still \"due\" for it
+ * For each exercise id, how many participants are still "due" for it
  * (not completed in the last month — i.e. in that user's eligible set).
  */
 function buildNeedCounts(eligibleSets: Set<string>[]): Map<string, number> {

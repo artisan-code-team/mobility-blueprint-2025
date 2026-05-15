@@ -11,13 +11,22 @@ First, set up your environment variables:
 POSTGRES_PRISMA_URL=your_postgres_url_here
 POSTGRES_URL_NON_POOLING=your_postgres_non_pooling_url_here
 
-# Authentication (Required for user login via magic links)
+# Authentication (Required for user login)
+# Magic link email (SMTP)
 EMAIL_SERVER_HOST=smtp.gmail.com
 EMAIL_SERVER_PORT=587
 EMAIL_SERVER_USER=your-email@domain.com
 EMAIL_SERVER_PASSWORD=your-app-password
 EMAIL_FROM=your-email@domain.com
 NEXTAUTH_SECRET=your-nextauth-secret
+# Google sign-in (OAuth 2.0). Create credentials in Google Cloud Console:
+# APIs & Services → Credentials → Create OAuth client ID (Web application).
+# Authorized redirect URI: https://your-domain.com/api/auth/callback/google
+# (for local dev, add http://localhost:3000/api/auth/callback/google)
+GOOGLE_CLIENT_ID=your-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+# Base URL of the app (required for OAuth callbacks in many deployments)
+NEXTAUTH_URL=http://localhost:3000
 
 # Sanity CMS (Required for content management)
 NEXT_PUBLIC_SANITY_PROJECT_ID=your_sanity_project_id
@@ -28,6 +37,14 @@ NEXT_PUBLIC_SANITY_TOKEN=your_sanity_token
 # Optional: Security token for exercise sync API
 SYNC_TOKEN=your_sync_token_for_exercise_sync
 ```
+
+### Testing Google sign-in on a Vercel preview (no local run)
+
+1. Push your branch (for example `feature/google-gmail-signin`) so Vercel creates a **Preview** deployment.
+2. In the Vercel dashboard, open that deployment and copy its **https** URL (branch previews usually keep the same hostname while the branch name is unchanged).
+3. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials) → your **OAuth 2.0 Web client** → add **Authorized JavaScript origins** `https://<preview-host>` and **Authorized redirect URIs** `https://<preview-host>/api/auth/callback/google`. Google does not allow wildcard preview hosts; the host must match the deployment URL exactly.
+4. In Vercel → **Settings → Environment Variables**, attach the same `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `NEXTAUTH_SECRET` (and your DB/Sanity keys) to the **Preview** environment. Set **`NEXTAUTH_URL`** for Preview to `https://<preview-host>` so OAuth callbacks match that host. If `NEXTAUTH_URL` is only set for Production, add a Preview override so previews do not inherit the production URL.
+5. **Redeploy** the preview after changing env vars or Google redirect URIs.
 
 Then, initialize the database:
 

@@ -3,7 +3,9 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { authConfig } from "@/lib/auth"
 import { DailySuggestions } from "../components/DailySuggestions"
+import { MonthCompletionCelebration } from "../components/MonthCompletionCelebration"
 import { prisma } from "@/lib/prisma"
+import { getDashboardDailySuggestionsPayload } from "@/lib/sessions/suggestions"
 
 /**
  * Categories of exercises available in the app.
@@ -58,6 +60,8 @@ export default async function Dashboard() {
     redirect('/subscribe')
   }
 
+  const suggestionsPayload = await getDashboardDailySuggestionsPayload(user.id)
+
   return (
     <div className="min-h-screen bg-slate-100 py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -68,7 +72,11 @@ export default async function Dashboard() {
           </p>
         </div>
 
-        <DailySuggestions userId={user.id} />
+        {suggestionsPayload.fullLibraryCompleteInRollingWindow && (
+          <MonthCompletionCelebration />
+        )}
+
+        <DailySuggestions userId={user.id} preloaded={suggestionsPayload} />
 
         <Link
           href="/sessions"
@@ -101,4 +109,4 @@ export default async function Dashboard() {
       </div>
     </div>
   )
-} 
+}

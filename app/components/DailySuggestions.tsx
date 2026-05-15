@@ -1,29 +1,23 @@
-import { prisma } from '@/lib/prisma'
 import { DailySuggestionsClient } from './DailySuggestionsClient'
-import { getSuggestedExercises } from '@/lib/sessions/suggestions'
+import {
+  getDashboardDailySuggestionsPayload,
+  type DashboardDailySuggestionsPayload,
+} from '@/lib/sessions/suggestions'
 
-export async function DailySuggestions({ userId }: { userId: string }) {
-  const suggestedExercises = await getSuggestedExercises(userId)
-  
-  // Get exercises completed today (from midnight to now)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const completedExercises = await prisma.exerciseCompletion.findMany({
-    where: {
-      userId,
-      createdAt: {
-        gte: today,
-      },
-    },
-    include: {
-      exercise: true,
-    },
-  })
+type DailySuggestionsProps = {
+  userId: string
+  preloaded?: DashboardDailySuggestionsPayload
+}
+
+export async function DailySuggestions({ userId, preloaded }: DailySuggestionsProps) {
+  const { suggestedExercises, completedExercises, fullLibraryCompleteInRollingWindow } =
+    preloaded ?? (await getDashboardDailySuggestionsPayload(userId))
 
   return (
     <DailySuggestionsClient
       initialSuggestedExercises={suggestedExercises}
       completedExercises={completedExercises}
+      fullLibraryCompleteInRollingWindow={fullLibraryCompleteInRollingWindow}
     />
   )
-} 
+}

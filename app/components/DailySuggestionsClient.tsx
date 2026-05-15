@@ -12,6 +12,8 @@ interface DailySuggestionsClientProps {
     createdAt: Date
     exercise: Exercise
   }[]
+  /** True when every catalog exercise has a completion in the rolling month window. */
+  fullLibraryCompleteInRollingWindow?: boolean
 }
 
 /**
@@ -30,6 +32,7 @@ interface DailySuggestionsClientProps {
 export function DailySuggestionsClient({
   initialSuggestedExercises,
   completedExercises,
+  fullLibraryCompleteInRollingWindow = false,
 }: DailySuggestionsClientProps) {
   const [todaysSuggestedExercises, setTodaysSuggestedExercises] = useState(initialSuggestedExercises)
   const [allExercisesCompleted, setAllExercisesCompleted] = useState(false)
@@ -92,9 +95,22 @@ export function DailySuggestionsClient({
     return acc
   }, {} as Record<string, typeof completedExercises>)
 
+  const hasSuggestionRows = Object.keys(exercisesByCategory).length > 0
+
   return (
     <div className="mb-12">
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Daily Suggestions</h2>
+      {fullLibraryCompleteInRollingWindow && !hasSuggestionRows && (
+        <div className="mb-6 rounded-xl border border-emerald-200/90 bg-emerald-50/90 p-5 text-emerald-950 shadow-sm">
+          <p className="font-medium">
+            You are fully caught up for this cycle—there is nothing new to assign
+            here until your rolling window advances.
+          </p>
+          <p className="mt-2 text-sm text-emerald-900/90">
+            You can still revisit any exercise from Conditioning or Restorative below.
+          </p>
+        </div>
+      )}
       {allExercisesCompleted && (
         <div className="mb-6 p-4 rounded-lg border border-green-200 bg-green-50 text-green-700">
           Congratulations! You have completed all exercises for today!

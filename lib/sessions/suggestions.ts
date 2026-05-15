@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import type { ExerciseCompletion, Exercise as PrismaExercise } from '@prisma/client'
 
 interface SuggestedExercise {
   id: string
@@ -9,11 +10,23 @@ interface SuggestedExercise {
   subCategory: string | null
 }
 
+export type DashboardCompletionWithExercise = ExerciseCompletion & {
+  exercise: PrismaExercise
+}
+
+export type DashboardDailySuggestionsPayload = {
+  suggestedExercises: SuggestedExercise[]
+  completedExercises: DashboardCompletionWithExercise[]
+  /** Every catalog exercise has a completion within the rolling month window (matches suggestions SQL). */
+  fullLibraryCompleteInRollingWindow: boolean
+}
+
 /**
  * Returns one random un-completed exercise per category/subcategory group
  * for the given user, excluding anything completed in the last month.
  *
- * This is the same query used by the DailySuggestions server component.
+ * This is the same query used by the DailySuggestions server component,
+ * extracted here so it can be reused by the group-session intersection logic.
  */
 export async function getSuggestedExercises(userId: string): Promise<SuggestedExercise[]> {
   return prisma.$queryRaw<SuggestedExercise[]>`
@@ -47,9 +60,8 @@ export async function getSuggestedExercises(userId: string): Promise<SuggestedEx
 }
 
 /**
- * All exercises the user is eligible for (not completed in the last month),
- * in random order. Used for group plan generation so the leader algorithm can
- * intersect full participant pools and pick per subcategory.
+ * Returns all exercises the user is eligible for today (not completed
+ * in the last month), in random order.
  */
 export async function getEligibleExercises(userId: string): Promise<SuggestedExercise[]> {
   return prisma.$queryRaw<SuggestedExercise[]>`
@@ -70,4 +82,38 @@ export async function getEligibleExercises(userId: string): Promise<SuggestedExe
     )
     ORDER BY random();
   `
+}
+
+/**
+ * Loads dashboard daily-suggestion data in one round trip where possible.
+ * `fullLibraryCompleteInRollingWindow` is true when the user has a completion
+ * dated within the rolling one-month window for every exercise in the catalog
+ * (same rule as category pages and `/api/exercises/complete`).
+ */
+export async function getDashboardDailySuggestionsPayload(
+  userId: string
+): Promise<DashboardDailySuggestionsPayload> {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const [suggestedExercises, totalExercises, completedExercises] = await Promise.all([
+    getSuggestedExercises(userId),
+    prisma.exercise.count(),
+    prisma.exerciseCompletion.findMany({
+      where: {
+        userId,
+        createdAt: { gte: today },
+      },
+      include: { exercise: true },
+    }),
+  ])
+
+  const fullLibraryCompleteInRollingWindow =
+    totalExercises > 0 && suggestedExercises.length === 0
+
+  return {
+    suggestedExercises,
+    completedExercises,
+    fullLibraryCompleteInRollingWindow,
+  }
 }

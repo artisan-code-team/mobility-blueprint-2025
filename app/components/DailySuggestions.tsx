@@ -10,14 +10,13 @@ type DailySuggestionsProps = {
 }
 
 export async function DailySuggestions({ userId, preloaded }: DailySuggestionsProps) {
-  const { suggestedExercises, completedExercises, fullLibraryCompleteInRollingWindow } =
+  const { suggestedExercises, completedExercises } =
     preloaded ?? (await getDashboardDailySuggestionsPayload(userId))
 
   return (
     <DailySuggestionsClient
       initialSuggestedExercises={suggestedExercises}
       completedExercises={completedExercises}
-      fullLibraryCompleteInRollingWindow={fullLibraryCompleteInRollingWindow}
     />
   )
-}
+} 

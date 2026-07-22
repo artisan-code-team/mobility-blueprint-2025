@@ -22,36 +22,44 @@ export type DashboardDailySuggestionsPayload = {
 }
 
 /**
- * Returns one random un-completed exercise per category/subcategory group
- * for the given user, excluding anything completed in the last month.
+ * Returns one un-completed exercise per category/subcategory group for the
+ * given user, excluding anything completed in the last month. Within each
+ * group, exercises that have gone longest without being completed are
+ * prioritized (never-completed exercises rank above ones the user is merely
+ * eligible for again after the cooldown), with a random tiebreak among
+ * exercises that are equally overdue (e.g. multiple never-completed in the
+ * same group).
  *
  * This is the same query used by the DailySuggestions server component,
  * extracted here so it can be reused by the group-session intersection logic.
  */
 export async function getSuggestedExercises(userId: string): Promise<SuggestedExercise[]> {
   return prisma.$queryRaw<SuggestedExercise[]>`
-    WITH RankedExercises AS (
-      SELECT 
+    WITH LastCompletion AS (
+      SELECT ec."exerciseId", MAX(ec."createdAt") AS last_completed_at
+      FROM exercise_completions ec
+      WHERE ec."userId" = ${userId}
+      GROUP BY ec."exerciseId"
+    ),
+    RankedExercises AS (
+      SELECT
         e.*,
+        lc.last_completed_at,
         ROW_NUMBER() OVER (
           PARTITION BY e.category, e."subCategory"
-          ORDER BY (SELECT random())
+          ORDER BY lc.last_completed_at ASC NULLS FIRST, random()
         ) as rn
       FROM exercises e
-      WHERE NOT EXISTS (
-        SELECT 1 
-        FROM exercise_completions ec 
-        WHERE e.id = ec."exerciseId" 
-        AND ec."userId" = ${userId}
-        AND ec."createdAt" >= NOW() - INTERVAL '1 month'
-      )
+      LEFT JOIN LastCompletion lc ON lc."exerciseId" = e.id
+      WHERE lc.last_completed_at IS NULL
+        OR lc.last_completed_at < NOW() - INTERVAL '1 month'
     )
-    SELECT 
-      id, 
-      name, 
-      description, 
-      "imageUrl", 
-      category, 
+    SELECT
+      id,
+      name,
+      description,
+      "imageUrl",
+      category,
       "subCategory"
     FROM RankedExercises
     WHERE rn = 1

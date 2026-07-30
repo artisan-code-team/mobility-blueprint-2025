@@ -10,9 +10,11 @@ const RADIUS = (SIZE - STROKE_WIDTH) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 /**
- * Dashboard stat card showing lifetime progress through the exercise catalog:
- * how many distinct exercises this user has completed at least once, out of
- * the total catalog size, as a circular progress indicator.
+ * Dashboard stat card showing this month's progress through the exercise
+ * catalog: how many distinct exercises this user has completed within the
+ * last 30 days, out of the total catalog size, as a circular progress
+ * indicator. The goal is cycling through the whole catalog every month, not
+ * lifetime completion — see `getCatalogProgress` for why.
  */
 export async function CatalogProgressRing({ userId }: CatalogProgressRingProps) {
   const { completedCount, totalCount } = await getCatalogProgress(userId)
@@ -32,7 +34,7 @@ export async function CatalogProgressRing({ userId }: CatalogProgressRingProps) 
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           className="-rotate-90"
           role="img"
-          aria-label={`${completedCount} of ${totalCount} exercises completed`}
+          aria-label={`${completedCount} of ${totalCount} exercises completed this month`}
         >
           <circle
             cx={SIZE / 2}
@@ -64,19 +66,19 @@ export async function CatalogProgressRing({ userId }: CatalogProgressRingProps) 
             <span className="text-base font-medium text-slate-400">/{totalCount}</span>
           </span>
           <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            completed
+            this month
           </span>
         </div>
       </div>
 
       <div className="text-center sm:text-left">
-        <h2 className="text-xl font-semibold text-slate-800">Your Catalog Progress</h2>
+        <h2 className="text-xl font-semibold text-slate-800">This Month&apos;s Progress</h2>
         <p className="mt-1 text-sm text-slate-600">
           {!hasCatalog
             ? 'No exercises in the catalog yet.'
             : isComplete
-            ? "You've completed every exercise in the catalog. Incredible work!"
-            : `${remaining} exercise${remaining === 1 ? '' : 's'} away from completing the entire catalog.`}
+            ? "You've cycled through the entire catalog this month. Incredible work!"
+            : `${remaining} exercise${remaining === 1 ? '' : 's'} away from completing the whole catalog this month.`}
         </p>
       </div>
     </div>

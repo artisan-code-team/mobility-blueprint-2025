@@ -11,6 +11,7 @@ export type StudentSummary = {
 export type StalenessItem = {
   id: string
   name: string
+  imageUrl: string | null
   category: string
   subCategory: string | null
   /** Days since the student last completed this exercise, or null if never completed. */
@@ -20,18 +21,6 @@ export type StalenessItem = {
 export type CategorizedStaleness = {
   conditioning: StalenessItem[]
   restorative: StalenessItem[]
-}
-
-export type CatchupItem = {
-  id: string
-  name: string
-  category: string
-  subCategory: string | null
-}
-
-export type CategorizedCatchup = {
-  conditioning: CatchupItem[]
-  restorative: CatchupItem[]
 }
 
 /**
@@ -56,7 +45,7 @@ export async function listStudents(): Promise<StudentSummary[]> {
 export async function getStudentStaleness(userId: string): Promise<CategorizedStaleness> {
   const [allExercises, completions] = await Promise.all([
     prisma.exercise.findMany({
-      select: { id: true, name: true, category: true, subCategory: true },
+      select: { id: true, name: true, imageUrl: true, category: true, subCategory: true },
     }),
     prisma.exerciseCompletion.findMany({
       where: { userId },
@@ -73,6 +62,7 @@ export async function getStudentStaleness(userId: string): Promise<CategorizedSt
     return {
       id: ex.id,
       name: ex.name,
+      imageUrl: ex.imageUrl,
       category: ex.category,
       subCategory: ex.subCategory,
       daysSince,
@@ -90,39 +80,5 @@ export async function getStudentStaleness(userId: string): Promise<CategorizedSt
   return {
     conditioning: items.filter((i) => i.category === 'conditioning').sort(sortOldestFirst),
     restorative: items.filter((i) => i.category === 'restorative').sort(sortOldestFirst),
-  }
-}
-
-/**
- * Gap-to-benchmark comparison: exercises the benchmark student has completed
- * at least once that the target student has never completed, split by
- * category.
- *
- * Query logic mirrors scripts/catchup-deidre-david-2026-07-28.mjs, generalized
- * from a fixed benchmark/pair to an arbitrary student/benchmark pair.
- */
-export async function getCatchupGaps(studentId: string, benchmarkId: string): Promise<CategorizedCatchup> {
-  const [allExercises, studentCompletions, benchmarkCompletions] = await Promise.all([
-    prisma.exercise.findMany({
-      select: { id: true, name: true, category: true, subCategory: true },
-    }),
-    prisma.exerciseCompletion.findMany({
-      where: { userId: studentId },
-      select: { exerciseId: true },
-    }),
-    prisma.exerciseCompletion.findMany({
-      where: { userId: benchmarkId },
-      select: { exerciseId: true },
-    }),
-  ])
-
-  const studentDone = new Set(studentCompletions.map((c) => c.exerciseId))
-  const benchmarkDone = new Set(benchmarkCompletions.map((c) => c.exerciseId))
-
-  const gaps = allExercises.filter((ex) => benchmarkDone.has(ex.id) && !studentDone.has(ex.id))
-
-  return {
-    conditioning: gaps.filter((g) => g.category === 'conditioning'),
-    restorative: gaps.filter((g) => g.category === 'restorative'),
   }
 }

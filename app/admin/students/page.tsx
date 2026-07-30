@@ -21,6 +21,19 @@ function formatDaysSince(daysSince: number | null) {
   return `${daysSince}d ago`
 }
 
+/**
+ * Color-codes recency at a glance for in-class use, matching the 30-day
+ * "this month" window used elsewhere (dashboard progress ring, completion
+ * cooldown): green if done within the last month, red if never done, slate
+ * for anything older. Meant to be scannable without reading numbers while
+ * teaching.
+ */
+function daysSinceClassName(daysSince: number | null) {
+  if (daysSince === null) return 'shrink-0 text-sm font-medium text-red-600'
+  if (daysSince <= 30) return 'shrink-0 text-sm font-medium text-green-600'
+  return 'shrink-0 text-sm font-medium text-slate-500'
+}
+
 export default async function StudentsAdminPage({
   searchParams,
 }: {
@@ -131,13 +144,7 @@ function StalenessColumn({
                 </div>
               </div>
               <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
-                <span
-                  className={
-                    item.daysSince === null
-                      ? 'shrink-0 text-sm font-medium text-red-600'
-                      : 'shrink-0 text-sm font-medium text-slate-500'
-                  }
-                >
+                <span className={daysSinceClassName(item.daysSince)}>
                   {formatDaysSince(item.daysSince)}
                 </span>
                 <MarkCompleteButton studentId={studentId} exerciseId={item.id} />

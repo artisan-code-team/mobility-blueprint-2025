@@ -4,6 +4,7 @@ import Link from "next/link"
 import { authConfig } from "@/lib/auth"
 import { DailySuggestions } from "../components/DailySuggestions"
 import { MonthCompletionCelebration } from "../components/MonthCompletionCelebration"
+import { CatalogProgressRing } from "../components/CatalogProgressRing"
 import { prisma } from "@/lib/prisma"
 import { getDashboardDailySuggestionsPayload } from "@/lib/sessions/suggestions"
 
@@ -75,6 +76,8 @@ export default async function Dashboard() {
         {suggestionsPayload.fullLibraryCompleteInRollingWindow && (
           <MonthCompletionCelebration />
         )}
+
+        <CatalogProgressRing userId={user.id} />
 
         <DailySuggestions userId={user.id} preloaded={suggestionsPayload} />
 

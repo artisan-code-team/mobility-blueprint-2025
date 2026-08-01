@@ -8,6 +8,8 @@ import { CatalogProgressRing } from "../components/CatalogProgressRing"
 import { prisma } from "@/lib/prisma"
 import { getDashboardDailySuggestionsPayload } from "@/lib/sessions/suggestions"
 
+const OWNER_EMAIL = (process.env.OWNER_EMAIL || 'charlievirgo666@gmail.com').toLowerCase()
+
 /**
  * Categories of exercises available in the app.
  * Each category has:
@@ -92,6 +94,20 @@ export default async function Dashboard() {
             Start or join a &ldquo;Common Ground&rdquo; session to practice with others using a shared exercise plan.
           </p>
         </Link>
+
+        {session.user.email.toLowerCase() === OWNER_EMAIL && (
+          <Link
+            href="/admin/students"
+            className="mb-8 block rounded-lg border border-slate-300 bg-slate-50 p-6 shadow-sm transition-all hover:shadow-md"
+          >
+            <h2 className="text-xl font-semibold text-slate-900">
+              Student Insights (Instructor)
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              See per-student staleness rankings and benchmark catch-up lists before class.
+            </p>
+          </Link>
+        )}
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {categories.map((category) => (

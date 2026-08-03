@@ -1,10 +1,11 @@
 'use client'
 
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
-import { ClockIcon, VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
 import clsx from 'clsx'
 import { CompleteExerciseButton } from './CompleteExerciseButton'
+import { ExerciseTimer } from './ExerciseTimer'
 import { getExerciseVisual } from './exerciseVisuals'
 import { Exercise } from '@/app/types/exercise'
 
@@ -82,13 +83,7 @@ export function ExerciseDetailModal({
             )}
 
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="flex items-center gap-3 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4">
-                <ClockIcon className="h-5 w-5 text-slate-400" />
-                <div>
-                  <p className="text-sm font-medium text-slate-700">Timer</p>
-                  <p className="text-xs text-slate-400">Coming soon</p>
-                </div>
-              </div>
+              <ExerciseTimer key={exercise.id} />
               <div className="flex items-center gap-3 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4">
                 <VideoCameraIcon className="h-5 w-5 text-slate-400" />
                 <div>

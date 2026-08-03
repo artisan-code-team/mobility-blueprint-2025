@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import { CompleteExerciseButton } from './CompleteExerciseButton'
+import { CheckIcon } from '@heroicons/react/20/solid'
+import clsx from 'clsx'
+import { ExerciseDetailModal } from './ExerciseDetailModal'
+import { getExerciseVisual } from './exerciseVisuals'
 import { Exercise } from '@/app/types/exercise'
 
 interface DailySuggestionsClientProps {
@@ -15,179 +17,123 @@ interface DailySuggestionsClientProps {
 }
 
 /**
- * Client-side component that displays suggested and completed exercises.
- * 
- * This component:
- * 1. Shows suggested exercises grouped by category
- * 2. Tracks exercise completion state
- * 3. Shows a success message when all exercises are completed
- * 4. Displays completed exercises in a separate section
- * 5. Handles exercise completion through CompleteExerciseButton
- *
- * @param initialSuggestedExercises - Array of exercises suggested for the day
- * @param completedExercises - Array of exercises completed today
+ * Client-side component that renders the day's suggested exercises as a
+ * vertical timeline. Items stay in their suggested order and switch to a
+ * checked visual state on completion rather than being removed or moved to
+ * a separate section. Tapping an item opens the full detail view.
  */
 export function DailySuggestionsClient({
   initialSuggestedExercises,
   completedExercises,
 }: DailySuggestionsClientProps) {
-  const [todaysSuggestedExercises, setTodaysSuggestedExercises] = useState(initialSuggestedExercises)
-  const [allExercisesCompleted, setAllExercisesCompleted] = useState(false)
-
-  const completedExerciseIds = new Set(
-    completedExercises.map(completion => completion.exercise.id)
+  const [completedIds, setCompletedIds] = useState<Set<string>>(
+    () => new Set(completedExercises.map((c) => c.exercise.id))
   )
+  const [completedAtById, setCompletedAtById] = useState<Record<string, Date>>(
+    () => Object.fromEntries(completedExercises.map((c) => [c.exercise.id, c.createdAt]))
+  )
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  /**
-   * Handles completion of an exercise by removing it from suggested exercises.
-   * 
-   * This function:
-   * 1. Filters out the completed exercise from the suggested exercises list
-   * 2. If no exercises remain, sets allExercisesCompleted flag to true
-   * 3. Returns the updated list of suggested exercises
-   * 
-   * @param exerciseId - ID of the exercise that was completed
-   */
-  const handleExerciseComplete = (exerciseId: string) => {
-    setTodaysSuggestedExercises(prev => {
-      const updatedExercises = prev.filter(exercise => exercise.id !== exerciseId)
-      if (updatedExercises.length === 0) {
-        setAllExercisesCompleted(true)
-      }
-      return updatedExercises
-    })
+  const allCompleted =
+    initialSuggestedExercises.length > 0 &&
+    initialSuggestedExercises.every((exercise) => completedIds.has(exercise.id))
+
+  const openExercise = (exercise: Exercise) => {
+    setSelectedExercise(exercise)
+    setIsModalOpen(true)
   }
 
-  /**
-   * Groups suggested exercises by their category.
-   * 
-   * This reduces the exercises array into an object where:
-   * - Keys are lowercase category names
-   * - Values are arrays of exercises in that category
-   * Used to organize exercises for display in the UI.
-   */
-  const exercisesByCategory = todaysSuggestedExercises.reduce((acc, exercise) => {
-    const category = exercise.category.toLowerCase()
-    if (!acc[category]) {
-      acc[category] = []
-    }
-    acc[category].push(exercise)
-    return acc
-  }, {} as Record<string, Exercise[]>)
+  const closeModal = () => {
+    setIsModalOpen(false)
+  }
 
-  /**
-   * Groups completed exercises by their category.
-   * 
-   * This reduces the completions array into an object where:
-   * - Keys are lowercase category names
-   * - Values are arrays of exercise completions in that category
-   * Used to track which exercises have been completed in each category.
-   */
-  const completedExercisesByCategory = completedExercises.reduce((acc, completion) => {
-    const category = completion.exercise.category.toLowerCase()
-    if (!acc[category]) {
-      acc[category] = []
-    }
-    acc[category].push(completion)
-    return acc
-  }, {} as Record<string, typeof completedExercises>)
+  const handleExerciseComplete = (exerciseId: string) => {
+    setCompletedIds((prev) => new Set(prev).add(exerciseId))
+    setCompletedAtById((prev) => ({ ...prev, [exerciseId]: new Date() }))
+  }
 
   return (
     <div className="mb-12">
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Daily Suggestions</h2>
-      {allExercisesCompleted && (
+      {allCompleted && (
         <div className="mb-6 p-4 rounded-lg border border-green-200 bg-green-50 text-green-700">
           Congratulations! You have completed all exercises for today!
         </div>
       )}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {Object.entries(exercisesByCategory).map(([category, exercises]) => (
-          <div key={category}>
-            <h3 className="text-xl font-semibold text-slate-800 mb-4 capitalize">
-              {category}
-            </h3>
-            <div className="grid grid-cols-1 gap-4">
-              {exercises.map((exercise) => (
-                <div
-                  key={exercise.id}
-                  className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border border-slate-200 bg-white ${
-                    completedExerciseIds.has(exercise.id) ? 'bg-green-50' : ''
-                  }`}
+      <div className="mx-auto max-w-xl rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <ol className="relative">
+          {initialSuggestedExercises.map((exercise, index) => {
+            const isDone = completedIds.has(exercise.id)
+            const visual = getExerciseVisual(exercise.category, exercise.subCategory)
+            const Icon = visual.icon
+            const isLast = index === initialSuggestedExercises.length - 1
+
+            return (
+              <li key={exercise.id} className="relative pb-8 last:pb-0">
+                {!isLast && (
+                  <span
+                    className="absolute left-5 top-5 -ml-px h-full w-0.5 bg-slate-200"
+                    aria-hidden="true"
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => openExercise(exercise)}
+                  className="group relative flex w-full items-start gap-4 text-left"
                 >
-                  {exercise.imageUrl && (
-                    <div className="relative h-40 w-full sm:h-16 sm:w-16 flex-shrink-0">
-                      <Image
-                        src={exercise.imageUrl}
-                        alt={exercise.name}
-                        fill
-                        className="object-cover rounded-md"
-                      />
-                    </div>
-                  )}
-                  <div className="flex-grow w-full">
-                    <h4 className="font-medium text-slate-900">{exercise.name}</h4>
-                    {exercise.subCategory && (
-                      <p className="text-sm text-slate-600 line-clamp-2">
-                        {exercise.subCategory.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}
-                      </p>
+                  <span
+                    className={clsx(
+                      'relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ring-4 ring-white',
+                      isDone ? 'bg-emerald-500' : visual.badgeClass
                     )}
-                  </div>
-                  <div className="w-full sm:w-[300px]">
-                    <CompleteExerciseButton
-                      exerciseId={exercise.id}
-                      isCompleted={completedExerciseIds.has(exercise.id)}
-                      completedAt={completedExercises.find(c => c.exercise.id === exercise.id)?.createdAt || null}
-                      onComplete={() => handleExerciseComplete(exercise.id)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-6">Completed Exercises</h2>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {Object.entries(completedExercisesByCategory).map(([category, completions]) => (
-          <div key={category}>
-            <h3 className="text-xl font-semibold text-slate-800 mb-4 capitalize">
-              {category}
-            </h3>
-            <div className="grid grid-cols-1 gap-4">
-              {completions.map((completion) => (
-                <div
-                  key={completion.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border border-slate-200 bg-green-50"
-                >
-                  {completion.exercise.imageUrl && (
-                    <div className="relative h-40 w-full sm:h-16 sm:w-16 flex-shrink-0">
-                      <Image
-                        src={completion.exercise.imageUrl}
-                        alt={completion.exercise.name}
-                        fill
-                        className="object-cover rounded-md"
-                      />
-                    </div>
-                  )}
-                  <div className="flex-grow">
-                    <h4 className="font-medium text-slate-900">{completion.exercise.name}</h4>
-                    {completion.exercise.subCategory && (
-                      <p className="text-sm text-slate-600 line-clamp-2">
-                        {completion.exercise.subCategory.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}
-                      </p>
+                  >
+                    {isDone ? (
+                      <CheckIcon className="h-5 w-5 text-white" />
+                    ) : (
+                      <Icon className="h-5 w-5 text-white" />
                     )}
-                  </div>
-                  <div className="w-full sm:w-[300px]">
-                    <div className="px-4 py-2 text-center text-green-700 bg-green-100 rounded-md">
-                      Completed
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+                  </span>
+                  <span
+                    className={clsx(
+                      'flex min-w-0 flex-1 flex-col gap-1 rounded-lg border p-3 transition-colors',
+                      isDone
+                        ? 'border-emerald-100 bg-emerald-50/60'
+                        : 'border-slate-200 bg-white group-hover:border-slate-300 group-hover:shadow-sm'
+                    )}
+                  >
+                    <span
+                      className={clsx(
+                        'text-base font-semibold normal-case',
+                        isDone ? 'text-slate-500' : 'text-slate-900'
+                      )}
+                    >
+                      {exercise.name}
+                    </span>
+                    <span
+                      className={clsx(
+                        'inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+                        visual.tagClass
+                      )}
+                    >
+                      {visual.label}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ol>
       </div>
+
+      <ExerciseDetailModal
+        exercise={selectedExercise}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        isCompleted={selectedExercise ? completedIds.has(selectedExercise.id) : false}
+        completedAt={selectedExercise ? completedAtById[selectedExercise.id] ?? null : null}
+        onComplete={() => selectedExercise && handleExerciseComplete(selectedExercise.id)}
+      />
     </div>
   )
 }

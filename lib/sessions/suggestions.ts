@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import type { ExerciseCompletion, Exercise as PrismaExercise } from '@prisma/client'
+import { getCatalogProgress } from '@/lib/exercises/progress'
 
 interface SuggestedExercise {
   id: string
@@ -30,16 +31,31 @@ export type DashboardDailySuggestionsPayload = {
  * exercises that are equally overdue (e.g. multiple never-completed in the
  * same group).
  *
- * This is the same query used by the DailySuggestions server component,
- * extracted here so it can be reused by the group-session intersection logic.
+ * A group with any completion today is excluded entirely rather than being
+ * given a replacement candidate — otherwise a group whose exercise the user
+ * already completed today would rotate in a *different* exercise on the next
+ * page load, so the same slot appears to show two exercises for one day
+ * (the just-completed one plus a fresh "next up" one). `todayStart` should be
+ * the same start-of-day boundary the caller uses to fetch today's completions,
+ * so both agree on what "today" means.
  */
-export async function getSuggestedExercises(userId: string): Promise<SuggestedExercise[]> {
+export async function getSuggestedExercises(
+  userId: string,
+  todayStart: Date
+): Promise<SuggestedExercise[]> {
   return prisma.$queryRaw<SuggestedExercise[]>`
     WITH LastCompletion AS (
       SELECT ec."exerciseId", MAX(ec."createdAt") AS last_completed_at
       FROM exercise_completions ec
       WHERE ec."userId" = ${userId}
       GROUP BY ec."exerciseId"
+    ),
+    CompletedTodaySlots AS (
+      SELECT DISTINCT e.category, e."subCategory"
+      FROM exercise_completions ec
+      JOIN exercises e ON e.id = ec."exerciseId"
+      WHERE ec."userId" = ${userId}
+        AND ec."createdAt" >= ${todayStart}
     ),
     RankedExercises AS (
       SELECT
@@ -51,8 +67,12 @@ export async function getSuggestedExercises(userId: string): Promise<SuggestedEx
         ) as rn
       FROM exercises e
       LEFT JOIN LastCompletion lc ON lc."exerciseId" = e.id
-      WHERE lc.last_completed_at IS NULL
-        OR lc.last_completed_at < NOW() - INTERVAL '1 month'
+      WHERE (lc.last_completed_at IS NULL OR lc.last_completed_at < NOW() - INTERVAL '1 month')
+        AND NOT EXISTS (
+          SELECT 1 FROM CompletedTodaySlots cts
+          WHERE cts.category = e.category
+            AND cts."subCategory" IS NOT DISTINCT FROM e."subCategory"
+        )
     )
     SELECT
       id,
@@ -96,7 +116,11 @@ export async function getEligibleExercises(userId: string): Promise<SuggestedExe
  * Loads dashboard daily-suggestion data in one round trip where possible.
  * `fullLibraryCompleteInRollingWindow` is true when the user has a completion
  * dated within the rolling one-month window for every exercise in the catalog
- * (same rule as category pages and `/api/exercises/complete`).
+ * (same rule as category pages and `/api/exercises/complete`) — this is
+ * intentionally derived from `getCatalogProgress`, not from
+ * `suggestedExercises` being empty, since `suggestedExercises` now also goes
+ * empty just from finishing today's slots (see `getSuggestedExercises`),
+ * which is a much smaller bar than the whole catalog.
  */
 export async function getDashboardDailySuggestionsPayload(
   userId: string
@@ -104,9 +128,8 @@ export async function getDashboardDailySuggestionsPayload(
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [suggestedExercises, totalExercises, completedExercises] = await Promise.all([
-    getSuggestedExercises(userId),
-    prisma.exercise.count(),
+  const [suggestedExercises, completedExercises, catalogProgress] = await Promise.all([
+    getSuggestedExercises(userId, today),
     prisma.exerciseCompletion.findMany({
       where: {
         userId,
@@ -114,10 +137,11 @@ export async function getDashboardDailySuggestionsPayload(
       },
       include: { exercise: true },
     }),
+    getCatalogProgress(userId),
   ])
 
   const fullLibraryCompleteInRollingWindow =
-    totalExercises > 0 && suggestedExercises.length === 0
+    catalogProgress.totalCount > 0 && catalogProgress.completedCount >= catalogProgress.totalCount
 
   return {
     suggestedExercises,

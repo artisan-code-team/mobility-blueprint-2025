@@ -35,16 +35,57 @@ function groupExercisesByCategory(exercises: Exercise[]) {
   }))
 }
 
+// The day's suggestions are a fixed set for the session: whatever was
+// suggested on load is what the user works through, one flip at a time.
+// This only backfills an exercise that was completed earlier today (before
+// this page load) but has since rotated out of the live suggestions query —
+// it does not run again after mount, so nothing new rotates in mid-session.
+function mergeSuggestedWithCompleted(
+  suggested: Exercise[],
+  completed: { exercise: Exercise }[]
+): Exercise[] {
+  const seen = new Set(suggested.map((exercise) => exercise.id))
+  const missing = completed
+    .map((c) => c.exercise)
+    .filter((exercise) => {
+      if (seen.has(exercise.id)) return false
+      seen.add(exercise.id)
+      return true
+    })
+
+  return missing.length > 0 ? [...suggested, ...missing] : suggested
+}
+
+function buildCompletionMessage(
+  categoryLabel: string,
+  remainingInCategory: number,
+  remainingTotal: number
+) {
+  if (remainingTotal === 0) return 'That was the last one for today. Nice work!'
+
+  const categoryPart =
+    remainingInCategory === 0
+      ? `That's the last one in ${categoryLabel} for now.`
+      : `Only ${remainingInCategory} more to go in ${categoryLabel}.`
+
+  return `${categoryPart} ${remainingTotal} more total.`
+}
+
 /**
  * Client-side component that renders the day's suggested exercises as a
- * vertical timeline. Items stay in their suggested order and switch to a
- * checked visual state on completion rather than being removed or moved to
- * a separate section. Tapping an item opens the full detail view.
+ * vertical timeline. The set of exercises is fixed for the session as soon
+ * as this component mounts: items stay in their suggested order and switch
+ * to a checked visual state on completion rather than being removed,
+ * replaced, or moved to a separate section. Tapping an item opens the full
+ * detail view.
  */
 export function DailySuggestionsClient({
   initialSuggestedExercises,
   completedExercises,
 }: DailySuggestionsClientProps) {
+  const [displayedExercises] = useState<Exercise[]>(() =>
+    mergeSuggestedWithCompleted(initialSuggestedExercises, completedExercises)
+  )
   const [completedIds, setCompletedIds] = useState<Set<string>>(
     () => new Set(completedExercises.map((c) => c.exercise.id))
   )
@@ -53,23 +94,39 @@ export function DailySuggestionsClient({
   )
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [completionMessage, setCompletionMessage] = useState<string | null>(null)
 
   const allCompleted =
-    initialSuggestedExercises.length > 0 &&
-    initialSuggestedExercises.every((exercise) => completedIds.has(exercise.id))
+    displayedExercises.length > 0 &&
+    displayedExercises.every((exercise) => completedIds.has(exercise.id))
 
   const openExercise = (exercise: Exercise) => {
+    setCompletionMessage(null)
     setSelectedExercise(exercise)
     setIsModalOpen(true)
   }
 
   const closeModal = () => {
     setIsModalOpen(false)
+    setCompletionMessage(null)
   }
 
   const handleExerciseComplete = (exerciseId: string) => {
-    setCompletedIds((prev) => new Set(prev).add(exerciseId))
+    const exercise = displayedExercises.find((e) => e.id === exerciseId)
+
+    const updatedIds = new Set(completedIds)
+    updatedIds.add(exerciseId)
+    setCompletedIds(updatedIds)
     setCompletedAtById((prev) => ({ ...prev, [exerciseId]: new Date() }))
+
+    if (exercise) {
+      const remainingInCategory = displayedExercises.filter(
+        (e) => e.category === exercise.category && !updatedIds.has(e.id)
+      ).length
+      const remainingTotal = displayedExercises.filter((e) => !updatedIds.has(e.id)).length
+      const categoryLabel = getExerciseVisual(exercise.category, null).label
+      setCompletionMessage(buildCompletionMessage(categoryLabel, remainingInCategory, remainingTotal))
+    }
   }
 
   return (
@@ -82,7 +139,7 @@ export function DailySuggestionsClient({
       )}
       <div className="mx-auto max-w-xl rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <ol className="relative">
-          {groupExercisesByCategory(initialSuggestedExercises).map((group, groupIndex, groups) => {
+          {groupExercisesByCategory(displayedExercises).map((group, groupIndex, groups) => {
             const sectionVisual = getExerciseVisual(group.category, null)
             const isLastGroup = groupIndex === groups.length - 1
 
@@ -180,6 +237,7 @@ export function DailySuggestionsClient({
         isCompleted={selectedExercise ? completedIds.has(selectedExercise.id) : false}
         completedAt={selectedExercise ? completedAtById[selectedExercise.id] ?? null : null}
         onComplete={() => selectedExercise && handleExerciseComplete(selectedExercise.id)}
+        completionMessage={completionMessage}
       />
     </div>
   )

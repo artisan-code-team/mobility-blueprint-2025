@@ -16,6 +16,7 @@ interface ExerciseDetailModalProps {
   isCompleted: boolean
   completedAt: Date | null
   onComplete: () => void
+  completionMessage?: string | null
 }
 
 export function ExerciseDetailModal({
@@ -25,6 +26,7 @@ export function ExerciseDetailModal({
   isCompleted,
   completedAt,
   onComplete,
+  completionMessage,
 }: ExerciseDetailModalProps) {
   if (!exercise) return null
 
@@ -100,6 +102,11 @@ export function ExerciseDetailModal({
                 completedAt={completedAt}
                 onComplete={onComplete}
               />
+              {completionMessage && (
+                <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3 text-sm text-emerald-700">
+                  {completionMessage}
+                </div>
+              )}
             </div>
           </div>
         </DialogPanel>

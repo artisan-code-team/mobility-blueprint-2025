@@ -5,4 +5,5 @@ export interface Exercise {
   imageUrl: string | null
   category: string
   subCategory: string | null
+  hasLeftRight: boolean
 } 

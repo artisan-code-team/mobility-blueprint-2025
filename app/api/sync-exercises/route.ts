@@ -9,6 +9,7 @@ interface SanityExercise {
   imageUrl?: string
   category: string
   subCategory?: string
+  hasLeftRight?: boolean
 }
 
 /**
@@ -29,7 +30,8 @@ async function syncExercise(exerciseId: string) {
     description,
     "imageUrl": image.asset->url,
     category,
-    subCategory
+    subCategory,
+    hasLeftRight
   }`, { id: exerciseId })
 
   if (!exercise) {
@@ -52,6 +54,7 @@ async function syncExercise(exerciseId: string) {
       imageUrl: exercise.imageUrl,
       category: exercise.category,
       subCategory: exercise.subCategory,
+      hasLeftRight: exercise.hasLeftRight ?? false,
     },
     create: {
       sanityId: exercise._id,
@@ -60,6 +63,7 @@ async function syncExercise(exerciseId: string) {
       imageUrl: exercise.imageUrl,
       category: exercise.category,
       subCategory: exercise.subCategory,
+      hasLeftRight: exercise.hasLeftRight ?? false,
     },
   })
 }
@@ -117,7 +121,8 @@ export async function GET() {
       description,
       "imageUrl": image.asset->url,
       category,
-      subCategory
+      subCategory,
+      hasLeftRight
     }`)
 
     const results = await Promise.all(

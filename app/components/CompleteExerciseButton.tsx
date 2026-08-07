@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { completeExercise, isRecentlyCompleted } from '@/lib/exercises/completeExercise'
 
 interface CompleteExerciseButtonProps {
   exerciseId: string
@@ -19,37 +20,14 @@ export function CompleteExerciseButton({
   const [isPending, setIsPending] = useState(false)
   const router = useRouter()
 
-  // Check if the exercise was completed within the last month
-  const isRecentlyCompleted = () => {
-    if (!isCompleted || !completedAt) return false
-    
-    const oneMonthAgo = new Date()
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
-    
-    return new Date(completedAt) >= oneMonthAgo
-  }
-
-  const recentlyCompleted = isRecentlyCompleted()
+  const recentlyCompleted = isRecentlyCompleted(isCompleted, completedAt)
 
   const handleComplete = async () => {
     if (recentlyCompleted || isPending) return
 
     try {
       setIsPending(true)
-      const response = await fetch('/api/exercises/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ exerciseId }),
-      })
-
-      if (!response.ok) {
-        if (response.status === 409) {
-          throw new Error('Exercise completed within the last month')
-        }
-        throw new Error('Failed to complete exercise')
-      }
+      await completeExercise(exerciseId)
 
       router.refresh()
       onComplete?.()

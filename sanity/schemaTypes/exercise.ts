@@ -55,6 +55,12 @@ const exercise = {
       },
       hidden: ({ document }: { document: { category?: string } }) => !['conditioning', 'restorative'].includes(document?.category ?? ''),
     },
+    {
+      name: 'hasLeftRight',
+      title: 'Left & Right',
+      type: 'boolean',
+      initialValue: false,
+    },
   ],
 }
 

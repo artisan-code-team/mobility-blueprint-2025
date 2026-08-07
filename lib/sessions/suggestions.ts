@@ -9,6 +9,7 @@ interface SuggestedExercise {
   imageUrl: string | null
   category: string
   subCategory: string | null
+  hasLeftRight: boolean
 }
 
 export type DashboardCompletionWithExercise = ExerciseCompletion & {
@@ -80,7 +81,8 @@ export async function getSuggestedExercises(
       description,
       "imageUrl",
       category,
-      "subCategory"
+      "subCategory",
+      "hasLeftRight"
     FROM RankedExercises
     WHERE rn = 1
     ORDER BY category, name;
@@ -99,7 +101,8 @@ export async function getEligibleExercises(userId: string): Promise<SuggestedExe
       e.description,
       e."imageUrl",
       e.category,
-      e."subCategory"
+      e."subCategory",
+      e."hasLeftRight"
     FROM exercises e
     WHERE NOT EXISTS (
       SELECT 1

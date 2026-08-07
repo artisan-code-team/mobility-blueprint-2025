@@ -5,6 +5,7 @@ import { VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
 import clsx from 'clsx'
 import { CompleteExerciseButton } from './CompleteExerciseButton'
+import { LeftRightToggle } from './LeftRightToggle'
 import { ExerciseTimer } from './ExerciseTimer'
 import { getExerciseVisual } from './exerciseVisuals'
 import { Exercise } from '@/app/types/exercise'
@@ -32,6 +33,11 @@ export function ExerciseDetailModal({
 
   const visual = getExerciseVisual(exercise.category, exercise.subCategory)
   const Icon = visual.icon
+
+  const handleCompleted = () => {
+    onComplete()
+    onClose()
+  }
 
   return (
     <Dialog open={isOpen} onClose={onClose} transition className="relative z-50">
@@ -96,12 +102,22 @@ export function ExerciseDetailModal({
             </div>
 
             <div className="mt-6">
-              <CompleteExerciseButton
-                exerciseId={exercise.id}
-                isCompleted={isCompleted}
-                completedAt={completedAt}
-                onComplete={onComplete}
-              />
+              {exercise.hasLeftRight ? (
+                <LeftRightToggle
+                  key={exercise.id}
+                  exerciseId={exercise.id}
+                  isCompleted={isCompleted}
+                  completedAt={completedAt}
+                  onCompleted={handleCompleted}
+                />
+              ) : (
+                <CompleteExerciseButton
+                  exerciseId={exercise.id}
+                  isCompleted={isCompleted}
+                  completedAt={completedAt}
+                  onComplete={handleCompleted}
+                />
+              )}
               {completionMessage && (
                 <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3 text-sm text-emerald-700">
                   {completionMessage}

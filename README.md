@@ -55,6 +55,8 @@ curl -X POST -H "Authorization: Bearer your_sync_token" http://localhost:3000/ap
 curl -X GET http://localhost:3000/api/sync-exercises
 ```
 
+**Note for QA on Vercel preview deployments:** the Sanity webhook that triggers this sync automatically points at a single fixed URL (production), so it never fires for preview deployments — their URLs change on every push. Preview and production share the same database, so after publishing a change in Sanity Studio, hit `<preview-url>/api/sync-exercises` (GET) manually before checking it on a preview, or the change won't show up there. Production doesn't need this — its webhook handles sync automatically.
+
 Run the development server:
 
 ```bash

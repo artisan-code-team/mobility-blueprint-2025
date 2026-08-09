@@ -14,6 +14,7 @@
     "@auth/prisma-adapter": "^2.7.4",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
+    "@portabletext/react": "^7.0.1",
     "@sanity/image-url": "^1.1.0",
     "@sanity/vision": "^3.68.3",
     "@stripe/stripe-js": "^7.8.0",

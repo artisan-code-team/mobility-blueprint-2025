@@ -1,10 +1,15 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 import Image from 'next/image'
+import { PortableText } from '@portabletext/react'
 import { CompleteExerciseButton } from '@/app/components/CompleteExerciseButton'
+import { createExerciseDescriptionComponents, isPortableTextBlocks } from '@/app/components/exerciseDescription'
 import { redirect } from 'next/navigation'
+
+const descriptionComponents = createExerciseDescriptionComponents('mt-2 text-sm text-slate-600')
 
 // Define valid categories and subcategories based on our schema
 const validCategories = ['conditioning', 'restorative']
@@ -22,7 +27,7 @@ type PageParams = {
 interface ExerciseWithCompletions {
   id: string
   name: string
-  description: string | null
+  description: Prisma.JsonValue | null
   imageUrl: string | null
   isCompleted: boolean
   completedAt: Date | null
@@ -113,8 +118,8 @@ export default async function ExercisesPage({ params }: PageParams) {
               )}
               <div className="p-4">
                 <h3 className="text-lg font-semibold text-slate-800">{exercise.name}</h3>
-                {exercise.description && (
-                  <p className="mt-2 text-sm text-slate-600">{exercise.description}</p>
+                {isPortableTextBlocks(exercise.description) && (
+                  <PortableText value={exercise.description} components={descriptionComponents} />
                 )}
                 <CompleteExerciseButton
                   exerciseId={exercise.id}

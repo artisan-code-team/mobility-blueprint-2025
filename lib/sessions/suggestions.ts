@@ -1,11 +1,11 @@
 import { prisma } from '@/lib/prisma'
-import type { ExerciseCompletion, Exercise as PrismaExercise } from '@prisma/client'
+import type { ExerciseCompletion, Exercise as PrismaExercise, Prisma } from '@prisma/client'
 import { getCatalogProgress } from '@/lib/exercises/progress'
 
 interface SuggestedExercise {
   id: string
   name: string
-  description: string | null
+  description: Prisma.JsonValue | null
   imageUrl: string | null
   category: string
   subCategory: string | null

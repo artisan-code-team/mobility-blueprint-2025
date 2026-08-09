@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import type { Prisma } from '@prisma/client'
 
 interface Participant {
   id: string
@@ -13,7 +14,7 @@ interface Participant {
 interface Exercise {
   id: string
   name: string
-  description: string | null
+  description: Prisma.JsonValue | null
   imageUrl: string | null
   category: string
   subCategory: string | null

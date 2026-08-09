@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
+import type { PortableTextBlock } from '@portabletext/types'
 import { client } from '@/sanity/lib/client'
 import { prisma } from '@/lib/prisma'
 
 interface SanityExercise {
   _id: string
   name: string
-  description?: string
+  description?: PortableTextBlock[]
   imageUrl?: string
   category: string
   subCategory?: string

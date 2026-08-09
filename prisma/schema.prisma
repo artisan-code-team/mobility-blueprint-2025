@@ -15,7 +15,7 @@ model Exercise {
   id          String   @id @default(cuid())
   sanityId    String   @unique
   name        String
-  description String?
+  description Json?
   imageUrl    String?
   category    String
   subCategory String?

@@ -29,6 +29,8 @@ Because that push isn't associated with the `origin` remote, the branch won't ha
 gh pr create --repo artisan-code-team/mobility-blueprint-2025 --head <branch> --base main --title "..." --body "..."
 ```
 
+**Never push directly to `main`, even for trivial changes, and never pass `--admin` or otherwise use bypass privileges to skip review.** `main` has branch protection requiring PRs; the `gh` credentials available in this environment can bypass it, and GitHub will silently allow the push with a `Bypassed rule violations` notice rather than rejecting it outright — that "success" is not permission. If a push to `main` ever succeeds without a PR, treat it as a mistake to fix (revert + reapply via a proper PR), not a shortcut to reuse.
+
 ## Other conventions
 
 Stack/style/architecture conventions for this codebase live in `.cursorrc` in this same directory — read that too.

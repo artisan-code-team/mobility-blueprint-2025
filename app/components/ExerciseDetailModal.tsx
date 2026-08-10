@@ -2,13 +2,19 @@
 
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { PortableText } from '@portabletext/react'
 import Image from 'next/image'
 import clsx from 'clsx'
 import { CompleteExerciseButton } from './CompleteExerciseButton'
 import { LeftRightToggle } from './LeftRightToggle'
 import { ExerciseTimer } from './ExerciseTimer'
 import { getExerciseVisual } from './exerciseVisuals'
+import { createExerciseDescriptionComponents, isPortableTextBlocks } from './exerciseDescription'
 import { Exercise } from '@/app/types/exercise'
+
+const descriptionComponents = createExerciseDescriptionComponents(
+  'mt-3 text-base leading-relaxed text-slate-600'
+)
 
 interface ExerciseDetailModalProps {
   exercise: Exercise | null
@@ -84,10 +90,8 @@ export function ExerciseDetailModal({
               {exercise.name}
             </DialogTitle>
 
-            {exercise.description && (
-              <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-slate-600">
-                {exercise.description}
-              </p>
+            {isPortableTextBlocks(exercise.description) && (
+              <PortableText value={exercise.description} components={descriptionComponents} />
             )}
 
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import type { Prisma } from '@prisma/client'
 import { authConfig } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
@@ -48,7 +49,7 @@ export async function GET(
     let exercises: {
       id: string
       name: string
-      description: string | null
+      description: Prisma.JsonValue | null
       imageUrl: string | null
       category: string
       subCategory: string | null

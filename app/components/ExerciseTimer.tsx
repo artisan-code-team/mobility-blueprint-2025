@@ -1,9 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ClockIcon, PauseIcon, PlayIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import {
+  ClockIcon,
+  PauseIcon,
+  PlayIcon,
+  ArrowPathIcon,
+  SpeakerWaveIcon,
+  SpeakerXMarkIcon,
+} from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 import { TIMER_PHASES, TIMER_TOTAL_SECONDS, getPhaseForElapsed } from '@/lib/exercises/timerPhases'
+import { createChimePlayer, type ChimePlayer } from '@/lib/exercises/completionChime'
+import { readSoundEnabled, writeSoundEnabled } from '@/lib/preferences/soundPreference'
 
 const SIZE = 176
 const STROKE_WIDTH = 12
@@ -40,10 +49,24 @@ function tickPoint(boundarySeconds: number, radius: number) {
 export function ExerciseTimer() {
   const [status, setStatus] = useState<TimerStatus>('idle')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  // Assume sound is on for the first render and reconcile from localStorage in an
+  // effect — reading storage during render would differ from the server pass.
+  const [soundEnabled, setSoundEnabled] = useState(true)
 
   const rafRef = useRef<number | null>(null)
   const startTimestampRef = useRef<number | null>(null)
   const accumulatedSecondsRef = useRef(0)
+  const chimeRef = useRef<ChimePlayer | null>(null)
+  // Wall-clock time the run is due to finish, kept independent of the rAF loop so
+  // the chime's schedule survives the loop being throttled in a background tab.
+  const completionDeadlineRef = useRef<number | null>(null)
+
+  const getChime = useCallback(() => {
+    if (!chimeRef.current) {
+      chimeRef.current = createChimePlayer()
+    }
+    return chimeRef.current
+  }, [])
 
   const stopLoop = useCallback(() => {
     if (rafRef.current !== null) {
@@ -67,14 +90,56 @@ export function ExerciseTimer() {
     rafRef.current = requestAnimationFrame(tick)
   }, [stopLoop])
 
-  useEffect(() => stopLoop, [stopLoop])
+  useEffect(() => {
+    setSoundEnabled(readSoundEnabled())
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      stopLoop()
+      chimeRef.current?.dispose()
+    }
+  }, [stopLoop])
+
+  /**
+   * Rescues the chime when the browser suspended the audio context while the tab was
+   * hidden — most likely on a locked phone — and silently dropped the scheduled
+   * strike. A suspended context freezes its clock, so an audio clock that never
+   * reached the strike time is proof the sound never happened.
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return
+
+      const deadline = completionDeadlineRef.current
+      const chime = chimeRef.current
+      if (deadline === null || chime === null || Date.now() < deadline) return
+
+      if (soundEnabled && !chime.hasSounded()) {
+        chime.playNow()
+      }
+      completionDeadlineRef.current = null
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [soundEnabled])
 
   const handleStart = () => {
     accumulatedSecondsRef.current = 0
     startTimestampRef.current = performance.now()
+    completionDeadlineRef.current = Date.now() + TIMER_TOTAL_SECONDS * 1000
     setElapsedSeconds(0)
     setStatus('running')
     rafRef.current = requestAnimationFrame(tick)
+
+    // This tap is the user gesture that lets audio play at all, so unlock here even
+    // when muted — otherwise unmuting mid-run would have nothing to schedule against.
+    const chime = getChime()
+    chime.unlock()
+    if (soundEnabled) {
+      chime.scheduleIn(TIMER_TOTAL_SECONDS)
+    }
   }
 
   const handlePause = () => {
@@ -82,21 +147,50 @@ export function ExerciseTimer() {
       accumulatedSecondsRef.current += (performance.now() - startTimestampRef.current) / 1000
     }
     stopLoop()
+    chimeRef.current?.cancel()
+    completionDeadlineRef.current = null
     setStatus('paused')
   }
 
   const handleResume = () => {
+    const remainingSeconds = Math.max(0, TIMER_TOTAL_SECONDS - accumulatedSecondsRef.current)
     startTimestampRef.current = performance.now()
+    completionDeadlineRef.current = Date.now() + remainingSeconds * 1000
     setStatus('running')
     rafRef.current = requestAnimationFrame(tick)
+
+    if (soundEnabled) {
+      getChime().scheduleIn(remainingSeconds)
+    }
   }
 
   const handleReset = () => {
     stopLoop()
+    chimeRef.current?.cancel()
+    completionDeadlineRef.current = null
     startTimestampRef.current = null
     accumulatedSecondsRef.current = 0
     setElapsedSeconds(0)
     setStatus('idle')
+  }
+
+  const handleToggleSound = () => {
+    const nextEnabled = !soundEnabled
+    setSoundEnabled(nextEnabled)
+    writeSoundEnabled(nextEnabled)
+
+    if (!nextEnabled) {
+      chimeRef.current?.cancel()
+      return
+    }
+
+    const chime = getChime()
+    chime.unlock()
+
+    const deadline = completionDeadlineRef.current
+    if (status === 'running' && deadline !== null) {
+      chime.scheduleIn((deadline - Date.now()) / 1000)
+    }
   }
 
   if (status === 'idle') {
@@ -212,7 +306,27 @@ export function ExerciseTimer() {
           <ArrowPathIcon className="h-4 w-4" />
           {status === 'done' ? 'Start Again' : 'Reset'}
         </button>
+        <button
+          type="button"
+          onClick={handleToggleSound}
+          aria-label="Completion sound"
+          aria-pressed={soundEnabled}
+          title={soundEnabled ? 'Completion sound on' : 'Completion sound off'}
+          className={clsx(
+            'inline-flex items-center rounded-full bg-white p-2 shadow-sm ring-1 ring-inset ring-slate-200 hover:bg-slate-100',
+            soundEnabled ? 'text-slate-700' : 'text-slate-400'
+          )}
+        >
+          {soundEnabled ? (
+            <SpeakerWaveIcon className="h-4 w-4" />
+          ) : (
+            <SpeakerXMarkIcon className="h-4 w-4" />
+          )}
+        </button>
       </div>
+      <p className="text-xs text-slate-400">
+        {soundEnabled ? 'A chime sounds when the timer finishes' : 'Completion chime muted'}
+      </p>
     </div>
   )
 }

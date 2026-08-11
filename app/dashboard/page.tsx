@@ -75,7 +75,7 @@ export default async function Dashboard() {
           </p>
         </div>
 
-        {suggestionsPayload.fullLibraryCompleteInRollingWindow && (
+        {suggestionsPayload.requiredPlanCompleteInRollingWindow && (
           <MonthCompletionCelebration />
         )}
 

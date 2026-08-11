@@ -45,6 +45,9 @@ const exercise = {
       name: 'category',
       title: 'Category',
       type: 'string',
+      // Adding an option here also requires adding it to REQUIRED_CATEGORIES
+      // or BONUS_CATEGORIES in lib/exercises/categories.ts, or exercises in
+      // that category will never surface in the app.
       options: {
         list: [
           { title: 'Conditioning', value: 'conditioning' },

@@ -1,19 +1,25 @@
 import { prisma } from '@/lib/prisma'
+import { REQUIRED_CATEGORIES } from '@/lib/exercises/categories'
 
 export type CatalogProgress = {
-  /** Count of distinct exercises this user has completed within the last 30 days. */
+  /** Count of distinct required-plan exercises this user has completed within the last 30 days. */
   completedCount: number
-  /** Total number of exercises currently in the catalog. */
+  /** Total number of required-plan exercises currently in the catalog. */
   totalCount: number
 }
 
 /**
- * Returns how many distinct exercises in the catalog this user has completed
- * within the rolling 30-day window, versus the total size of the catalog.
+ * Returns how many distinct exercises in the *required plan* this user has
+ * completed within the rolling 30-day window, versus the size of that plan.
  *
- * The goal this ring tracks is cycling through the *entire* catalog within a
- * month (that's what keeps connective tissue in a state of growth) — not
- * lifetime completion. `ExerciseCompletion` is a one-time flag per
+ * The goal this ring tracks is cycling through every Conditioning and
+ * Restorative exercise within a month (that's what keeps connective tissue in
+ * a state of growth) — not lifetime completion, and not the whole catalog.
+ * Bonus categories (see `lib/exercises/categories.ts`) are excluded from both
+ * the numerator and the denominator, so optional work can neither inflate the
+ * ring's total nor move the needle on it.
+ *
+ * `ExerciseCompletion` is a one-time flag per
  * user+exercise (`@@unique([userId, exerciseId])`); `createdAt` gets
  * refreshed (deleted + recreated) whenever the exercise is re-completed after
  * 30+ days, per `app/api/exercises/complete/route.ts`. So filtering to rows
@@ -28,9 +34,15 @@ export async function getCatalogProgress(userId: string): Promise<CatalogProgres
 
   const [completedCount, totalCount] = await Promise.all([
     prisma.exerciseCompletion.count({
-      where: { userId, createdAt: { gte: thirtyDaysAgo } },
+      where: {
+        userId,
+        createdAt: { gte: thirtyDaysAgo },
+        exercise: { category: { in: [...REQUIRED_CATEGORIES] } },
+      },
     }),
-    prisma.exercise.count(),
+    prisma.exercise.count({
+      where: { category: { in: [...REQUIRED_CATEGORIES] } },
+    }),
   ])
 
   return { completedCount, totalCount }

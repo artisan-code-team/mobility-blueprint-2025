@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
-import type { ExerciseCompletion, Exercise as PrismaExercise, Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+import type { ExerciseCompletion, Exercise as PrismaExercise } from '@prisma/client'
 import { getCatalogProgress } from '@/lib/exercises/progress'
+import { BONUS_CATEGORIES, REQUIRED_CATEGORIES } from '@/lib/exercises/categories'
 
 interface SuggestedExercise {
   id: string
@@ -17,16 +19,20 @@ export type DashboardCompletionWithExercise = ExerciseCompletion & {
 }
 
 export type DashboardDailySuggestionsPayload = {
+  /** Today's required-plan suggestions (Conditioning + Restorative only). */
   suggestedExercises: SuggestedExercise[]
   completedExercises: DashboardCompletionWithExercise[]
-  /** Every catalog exercise has a completion within the rolling month window (matches suggestions SQL). */
-  fullLibraryCompleteInRollingWindow: boolean
+  /** Every required-plan exercise has a completion within the rolling month window. */
+  requiredPlanCompleteInRollingWindow: boolean
+  /** Optional extras, non-empty only once the required plan is complete. */
+  bonusExercises: SuggestedExercise[]
 }
 
 /**
  * Returns one un-completed exercise per category/subcategory group for the
- * given user, excluding anything completed in the last month. Within each
- * group, exercises that have gone longest without being completed are
+ * given user, limited to `categories` and excluding anything completed in the
+ * last month. Within each group, exercises that have gone longest without
+ * being completed are
  * prioritized (never-completed exercises rank above ones the user is merely
  * eligible for again after the cooldown), with a random tiebreak among
  * exercises that are equally overdue (e.g. multiple never-completed in the
@@ -42,8 +48,11 @@ export type DashboardDailySuggestionsPayload = {
  */
 export async function getSuggestedExercises(
   userId: string,
-  todayStart: Date
+  todayStart: Date,
+  categories: readonly string[]
 ): Promise<SuggestedExercise[]> {
+  if (categories.length === 0) return []
+
   return prisma.$queryRaw<SuggestedExercise[]>`
     WITH LastCompletion AS (
       SELECT ec."exerciseId", MAX(ec."createdAt") AS last_completed_at
@@ -68,7 +77,8 @@ export async function getSuggestedExercises(
         ) as rn
       FROM exercises e
       LEFT JOIN LastCompletion lc ON lc."exerciseId" = e.id
-      WHERE (lc.last_completed_at IS NULL OR lc.last_completed_at < NOW() - INTERVAL '1 month')
+      WHERE e.category IN (${Prisma.join(categories)})
+        AND (lc.last_completed_at IS NULL OR lc.last_completed_at < NOW() - INTERVAL '1 month')
         AND NOT EXISTS (
           SELECT 1 FROM CompletedTodaySlots cts
           WHERE cts.category = e.category
@@ -117,13 +127,17 @@ export async function getEligibleExercises(userId: string): Promise<SuggestedExe
 
 /**
  * Loads dashboard daily-suggestion data in one round trip where possible.
- * `fullLibraryCompleteInRollingWindow` is true when the user has a completion
- * dated within the rolling one-month window for every exercise in the catalog
- * (same rule as category pages and `/api/exercises/complete`) — this is
- * intentionally derived from `getCatalogProgress`, not from
- * `suggestedExercises` being empty, since `suggestedExercises` now also goes
- * empty just from finishing today's slots (see `getSuggestedExercises`),
- * which is a much smaller bar than the whole catalog.
+ *
+ * `requiredPlanCompleteInRollingWindow` is true when the user has a completion
+ * dated within the rolling one-month window for every Conditioning and
+ * Restorative exercise (same rule as category pages and
+ * `/api/exercises/complete`) — this is intentionally derived from
+ * `getCatalogProgress`, not from `suggestedExercises` being empty, since
+ * `suggestedExercises` also goes empty just from finishing today's slots (see
+ * `getSuggestedExercises`), which is a much smaller bar than the whole plan.
+ *
+ * Bonus exercises are only fetched once that flag is true, so students still
+ * working through the plan neither see extras nor pay for the extra query.
  */
 export async function getDashboardDailySuggestionsPayload(
   userId: string
@@ -132,7 +146,7 @@ export async function getDashboardDailySuggestionsPayload(
   today.setHours(0, 0, 0, 0)
 
   const [suggestedExercises, completedExercises, catalogProgress] = await Promise.all([
-    getSuggestedExercises(userId, today),
+    getSuggestedExercises(userId, today, REQUIRED_CATEGORIES),
     prisma.exerciseCompletion.findMany({
       where: {
         userId,
@@ -143,12 +157,17 @@ export async function getDashboardDailySuggestionsPayload(
     getCatalogProgress(userId),
   ])
 
-  const fullLibraryCompleteInRollingWindow =
+  const requiredPlanCompleteInRollingWindow =
     catalogProgress.totalCount > 0 && catalogProgress.completedCount >= catalogProgress.totalCount
+
+  const bonusExercises = requiredPlanCompleteInRollingWindow
+    ? await getSuggestedExercises(userId, today, BONUS_CATEGORIES)
+    : []
 
   return {
     suggestedExercises,
     completedExercises,
-    fullLibraryCompleteInRollingWindow,
+    requiredPlanCompleteInRollingWindow,
+    bonusExercises,
   }
 }

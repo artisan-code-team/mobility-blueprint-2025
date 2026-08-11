@@ -5,7 +5,8 @@ import { CheckIcon } from '@heroicons/react/20/solid'
 import { FlagIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 import { ExerciseDetailModal } from './ExerciseDetailModal'
-import { getExerciseVisual } from './exerciseVisuals'
+import { getExerciseVisual, BONUS_SECTION_VISUAL } from './exerciseVisuals'
+import { isBonusCategory } from '@/lib/exercises/categories'
 import { Exercise } from '@/app/types/exercise'
 
 interface DailySuggestionsClientProps {
@@ -15,24 +16,39 @@ interface DailySuggestionsClientProps {
     createdAt: Date
     exercise: Exercise
   }[]
+  bonusExercises?: Exercise[]
 }
 
+const BONUS_GROUP = 'bonus'
+
 // Conditioning is shown before Restorative to match the order used
-// elsewhere in the app (e.g. the dashboard's category browse cards).
-// Any other category value falls back to the order it's first seen in.
-const CATEGORY_ORDER = ['conditioning', 'restorative']
+// elsewhere in the app (e.g. the dashboard's category browse cards), with
+// bonus work last. Any other category value falls back to the order it's
+// first seen in.
+const CATEGORY_ORDER = ['conditioning', 'restorative', BONUS_GROUP]
+
+// Every bonus category collapses into one group so the timeline shows a
+// single "Bonus Exercises" heading rather than one heading per bonus
+// category. Items still render their own category on their chip.
+function groupKeyFor(exercise: Exercise) {
+  return isBonusCategory(exercise.category) ? BONUS_GROUP : exercise.category
+}
 
 function groupExercisesByCategory(exercises: Exercise[]) {
-  const seenCategories = Array.from(new Set(exercises.map((exercise) => exercise.category)))
-  const orderedCategories = [
-    ...CATEGORY_ORDER.filter((category) => seenCategories.includes(category)),
-    ...seenCategories.filter((category) => !CATEGORY_ORDER.includes(category)),
+  const seenGroups = Array.from(new Set(exercises.map(groupKeyFor)))
+  const orderedGroups = [
+    ...CATEGORY_ORDER.filter((group) => seenGroups.includes(group)),
+    ...seenGroups.filter((group) => !CATEGORY_ORDER.includes(group)),
   ]
 
-  return orderedCategories.map((category) => ({
-    category,
-    exercises: exercises.filter((exercise) => exercise.category === category),
+  return orderedGroups.map((group) => ({
+    category: group,
+    exercises: exercises.filter((exercise) => groupKeyFor(exercise) === group),
   }))
+}
+
+function getSectionVisual(group: string) {
+  return group === BONUS_GROUP ? BONUS_SECTION_VISUAL : getExerciseVisual(group, null)
 }
 
 // The day's suggestions are a fixed set for the session: whatever was
@@ -82,9 +98,13 @@ function buildCompletionMessage(
 export function DailySuggestionsClient({
   initialSuggestedExercises,
   completedExercises,
+  bonusExercises = [],
 }: DailySuggestionsClientProps) {
   const [displayedExercises] = useState<Exercise[]>(() =>
-    mergeSuggestedWithCompleted(initialSuggestedExercises, completedExercises)
+    mergeSuggestedWithCompleted(
+      [...initialSuggestedExercises, ...bonusExercises],
+      completedExercises
+    )
   )
   const [completedIds, setCompletedIds] = useState<Set<string>>(
     () => new Set(completedExercises.map((c) => c.exercise.id))
@@ -120,11 +140,12 @@ export function DailySuggestionsClient({
     setCompletedAtById((prev) => ({ ...prev, [exerciseId]: new Date() }))
 
     if (exercise) {
+      const group = groupKeyFor(exercise)
       const remainingInCategory = displayedExercises.filter(
-        (e) => e.category === exercise.category && !updatedIds.has(e.id)
+        (e) => groupKeyFor(e) === group && !updatedIds.has(e.id)
       ).length
       const remainingTotal = displayedExercises.filter((e) => !updatedIds.has(e.id)).length
-      const categoryLabel = getExerciseVisual(exercise.category, null).label
+      const categoryLabel = getSectionVisual(group).label
       setCompletionMessage(buildCompletionMessage(categoryLabel, remainingInCategory, remainingTotal))
     }
   }
@@ -140,7 +161,7 @@ export function DailySuggestionsClient({
       <div className="mx-auto max-w-xl rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <ol className="relative">
           {groupExercisesByCategory(displayedExercises).map((group, groupIndex, groups) => {
-            const sectionVisual = getExerciseVisual(group.category, null)
+            const sectionVisual = getSectionVisual(group.category)
             const isLastGroup = groupIndex === groups.length - 1
 
             return (

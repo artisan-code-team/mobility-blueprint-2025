@@ -10,11 +10,11 @@ const RADIUS = (SIZE - STROKE_WIDTH) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 /**
- * Dashboard stat card showing this month's progress through the exercise
- * catalog: how many distinct exercises this user has completed within the
- * last 30 days, out of the total catalog size, as a circular progress
- * indicator. The goal is cycling through the whole catalog every month, not
- * lifetime completion — see `getCatalogProgress` for why.
+ * Dashboard stat card showing this month's progress through the required
+ * plan: how many distinct Conditioning and Restorative exercises this user has
+ * completed within the last 30 days, out of the plan's total size, as a
+ * circular progress indicator. Bonus categories are excluded — see
+ * `getCatalogProgress` for why.
  */
 export async function CatalogProgressRing({ userId }: CatalogProgressRingProps) {
   const { completedCount, totalCount } = await getCatalogProgress(userId)
@@ -34,7 +34,7 @@ export async function CatalogProgressRing({ userId }: CatalogProgressRingProps) 
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           className="-rotate-90"
           role="img"
-          aria-label={`${completedCount} of ${totalCount} exercises completed this month`}
+          aria-label={`${completedCount} of ${totalCount} monthly plan exercises completed this month`}
         >
           <circle
             cx={SIZE / 2}
@@ -77,8 +77,8 @@ export async function CatalogProgressRing({ userId }: CatalogProgressRingProps) 
           {!hasCatalog
             ? 'No exercises in the catalog yet.'
             : isComplete
-            ? "You've cycled through the entire catalog this month. Incredible work!"
-            : `${remaining} exercise${remaining === 1 ? '' : 's'} away from completing the whole catalog this month.`}
+            ? "You've completed your whole monthly plan. Incredible work!"
+            : `${remaining} exercise${remaining === 1 ? '' : 's'} away from completing your monthly plan.`}
         </p>
       </div>
     </div>

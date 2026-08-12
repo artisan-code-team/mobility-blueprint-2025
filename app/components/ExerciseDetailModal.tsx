@@ -24,6 +24,8 @@ interface ExerciseDetailModalProps {
   completedAt: Date | null
   onComplete: () => void
   completionMessage?: string | null
+  /** Instructor context: completes on behalf of this student instead of the signed-in user. */
+  studentId?: string
 }
 
 export function ExerciseDetailModal({
@@ -34,6 +36,7 @@ export function ExerciseDetailModal({
   completedAt,
   onComplete,
   completionMessage,
+  studentId,
 }: ExerciseDetailModalProps) {
   if (!exercise) return null
 
@@ -113,6 +116,7 @@ export function ExerciseDetailModal({
                   isCompleted={isCompleted}
                   completedAt={completedAt}
                   onCompleted={handleCompleted}
+                  studentId={studentId}
                 />
               ) : (
                 <CompleteExerciseButton
@@ -120,6 +124,7 @@ export function ExerciseDetailModal({
                   isCompleted={isCompleted}
                   completedAt={completedAt}
                   onComplete={handleCompleted}
+                  studentId={studentId}
                 />
               )}
               {completionMessage && (

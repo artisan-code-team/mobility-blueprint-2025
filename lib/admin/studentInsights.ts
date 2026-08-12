@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
 const DAY_MS = 1000 * 60 * 60 * 24
@@ -11,9 +12,11 @@ export type StudentSummary = {
 export type StalenessItem = {
   id: string
   name: string
+  description: Prisma.JsonValue | null
   imageUrl: string | null
   category: string
   subCategory: string | null
+  hasLeftRight: boolean
   /** Days since the student last completed this exercise, or null if never completed. */
   daysSince: number | null
 }
@@ -45,7 +48,15 @@ export async function listStudents(): Promise<StudentSummary[]> {
 export async function getStudentStaleness(userId: string): Promise<CategorizedStaleness> {
   const [allExercises, completions] = await Promise.all([
     prisma.exercise.findMany({
-      select: { id: true, name: true, imageUrl: true, category: true, subCategory: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        imageUrl: true,
+        category: true,
+        subCategory: true,
+        hasLeftRight: true,
+      },
     }),
     prisma.exerciseCompletion.findMany({
       where: { userId },
@@ -62,9 +73,11 @@ export async function getStudentStaleness(userId: string): Promise<CategorizedSt
     return {
       id: ex.id,
       name: ex.name,
+      description: ex.description,
       imageUrl: ex.imageUrl,
       category: ex.category,
       subCategory: ex.subCategory,
+      hasLeftRight: ex.hasLeftRight,
       daysSince,
     }
   })

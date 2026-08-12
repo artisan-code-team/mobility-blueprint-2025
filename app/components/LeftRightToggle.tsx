@@ -10,6 +10,8 @@ interface LeftRightToggleProps {
   isCompleted: boolean
   completedAt: Date | null
   onCompleted: () => void
+  /** Instructor context: completes on behalf of this student, bypassing the cooldown below. */
+  studentId?: string
 }
 
 type Side = 'left' | 'right'
@@ -20,8 +22,8 @@ type Side = 'left' | 'right'
  * completed (via the same endpoint CompleteExerciseButton uses) the moment
  * both sides are checked.
  */
-export function LeftRightToggle({ exerciseId, isCompleted, completedAt, onCompleted }: LeftRightToggleProps) {
-  const locked = isRecentlyCompleted(isCompleted, completedAt)
+export function LeftRightToggle({ exerciseId, isCompleted, completedAt, onCompleted, studentId }: LeftRightToggleProps) {
+  const locked = studentId ? false : isRecentlyCompleted(isCompleted, completedAt)
   const [leftDone, setLeftDone] = useState(isCompleted)
   const [rightDone, setRightDone] = useState(isCompleted)
   const [isPending, setIsPending] = useState(false)
@@ -38,7 +40,7 @@ export function LeftRightToggle({ exerciseId, isCompleted, completedAt, onComple
 
     try {
       setIsPending(true)
-      await completeExercise(exerciseId)
+      await completeExercise(exerciseId, studentId)
       onCompleted()
     } catch (error) {
       console.error('Error completing exercise:', error)

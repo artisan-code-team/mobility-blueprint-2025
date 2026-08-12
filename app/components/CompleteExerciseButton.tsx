@@ -9,25 +9,28 @@ interface CompleteExerciseButtonProps {
   isCompleted: boolean
   completedAt?: Date | null
   onComplete?: () => void
+  /** Instructor context: completes on behalf of this student, bypassing the cooldown below. */
+  studentId?: string
 }
 
-export function CompleteExerciseButton({ 
-  exerciseId, 
+export function CompleteExerciseButton({
+  exerciseId,
   isCompleted,
   completedAt,
-  onComplete 
+  onComplete,
+  studentId,
 }: CompleteExerciseButtonProps) {
   const [isPending, setIsPending] = useState(false)
   const router = useRouter()
 
-  const recentlyCompleted = isRecentlyCompleted(isCompleted, completedAt)
+  const recentlyCompleted = studentId ? false : isRecentlyCompleted(isCompleted, completedAt)
 
   const handleComplete = async () => {
     if (recentlyCompleted || isPending) return
 
     try {
       setIsPending(true)
-      await completeExercise(exerciseId)
+      await completeExercise(exerciseId, studentId)
 
       router.refresh()
       onComplete?.()

@@ -1,7 +1,15 @@
 'use client'
 
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
-import { VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  DialogTitle,
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+} from '@headlessui/react'
+import { ChevronRightIcon, VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { PortableText } from '@portabletext/react'
 import Image from 'next/image'
 import clsx from 'clsx'
@@ -94,7 +102,21 @@ export function ExerciseDetailModal({
             </DialogTitle>
 
             {isPortableTextBlocks(exercise.description) && (
-              <PortableText value={exercise.description} components={descriptionComponents} />
+              <Disclosure key={exercise.id} as="div" className="mt-3">
+                {({ open }) => (
+                  <>
+                    <DisclosureButton className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700">
+                      <ChevronRightIcon
+                        className={clsx('h-4 w-4 transition-transform', open && 'rotate-90')}
+                      />
+                      Directions
+                    </DisclosureButton>
+                    <DisclosurePanel>
+                      <PortableText value={exercise.description} components={descriptionComponents} />
+                    </DisclosurePanel>
+                  </>
+                )}
+              </Disclosure>
             )}
 
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">

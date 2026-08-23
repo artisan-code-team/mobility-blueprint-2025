@@ -1,28 +1,15 @@
 'use client'
 
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-} from '@headlessui/react'
-import { ChevronRightIcon, VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { PortableText } from '@portabletext/react'
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { VideoCameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
 import clsx from 'clsx'
 import { CompleteExerciseButton } from './CompleteExerciseButton'
 import { LeftRightToggle } from './LeftRightToggle'
 import { ExerciseTimer } from './ExerciseTimer'
+import { ExerciseDirections } from './ExerciseDirections'
 import { getExerciseVisual } from './exerciseVisuals'
-import { createExerciseDescriptionComponents, isPortableTextBlocks } from './exerciseDescription'
 import { Exercise } from '@/app/types/exercise'
-
-const descriptionComponents = createExerciseDescriptionComponents(
-  'mt-3 text-base leading-relaxed text-slate-600'
-)
 
 interface ExerciseDetailModalProps {
   exercise: Exercise | null
@@ -101,23 +88,12 @@ export function ExerciseDetailModal({
               {exercise.name}
             </DialogTitle>
 
-            {isPortableTextBlocks(exercise.description) && (
-              <Disclosure key={exercise.id} as="div" className="mt-3">
-                {({ open }) => (
-                  <>
-                    <DisclosureButton className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700">
-                      <ChevronRightIcon
-                        className={clsx('h-4 w-4 transition-transform', open && 'rotate-90')}
-                      />
-                      Directions
-                    </DisclosureButton>
-                    <DisclosurePanel>
-                      <PortableText value={exercise.description} components={descriptionComponents} />
-                    </DisclosurePanel>
-                  </>
-                )}
-              </Disclosure>
-            )}
+            <ExerciseDirections
+              key={exercise.id}
+              description={exercise.description}
+              paragraphClassName="mt-3 text-base leading-relaxed text-slate-600"
+              className="mt-3"
+            />
 
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <ExerciseTimer key={exercise.id} />

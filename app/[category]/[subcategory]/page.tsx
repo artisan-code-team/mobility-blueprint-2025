@@ -4,15 +4,9 @@ import type { Prisma } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 import Image from 'next/image'
-import { PortableText } from '@portabletext/react'
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
-import clsx from 'clsx'
 import { CompleteExerciseButton } from '@/app/components/CompleteExerciseButton'
-import { createExerciseDescriptionComponents, isPortableTextBlocks } from '@/app/components/exerciseDescription'
+import { ExerciseDirections } from '@/app/components/ExerciseDirections'
 import { redirect } from 'next/navigation'
-
-const descriptionComponents = createExerciseDescriptionComponents('mt-2 text-sm text-slate-600')
 
 // Define valid categories and subcategories based on our schema
 const validCategories = ['conditioning', 'restorative']
@@ -121,23 +115,11 @@ export default async function ExercisesPage({ params }: PageParams) {
               )}
               <div className="p-4">
                 <h3 className="text-lg font-semibold text-slate-800">{exercise.name}</h3>
-                {isPortableTextBlocks(exercise.description) && (
-                  <Disclosure as="div" className="mt-2">
-                    {({ open }) => (
-                      <>
-                        <DisclosureButton className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-700">
-                          <ChevronRightIcon
-                            className={clsx('h-4 w-4 transition-transform', open && 'rotate-90')}
-                          />
-                          Directions
-                        </DisclosureButton>
-                        <DisclosurePanel>
-                          <PortableText value={exercise.description} components={descriptionComponents} />
-                        </DisclosurePanel>
-                      </>
-                    )}
-                  </Disclosure>
-                )}
+                <ExerciseDirections
+                  description={exercise.description}
+                  paragraphClassName="mt-2 text-sm text-slate-600"
+                  className="mt-2"
+                />
                 <CompleteExerciseButton
                   exerciseId={exercise.id}
                   isCompleted={exercise.isCompleted}

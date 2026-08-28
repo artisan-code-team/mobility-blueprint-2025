@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+import { ROLLING_WINDOW_SQL_INTERVAL } from '@/lib/exercises/rollingWindow'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 import Image from 'next/image'
@@ -69,7 +70,7 @@ export default async function ExercisesPage({ params }: PageParams) {
       e.description,
       e."imageUrl",
       CASE 
-        WHEN ec.id IS NOT NULL AND ec."createdAt" >= NOW() - INTERVAL '1 month' 
+        WHEN ec.id IS NOT NULL AND ec."createdAt" >= NOW() - ${Prisma.raw(ROLLING_WINDOW_SQL_INTERVAL)}
         THEN true 
         ELSE false 
       END as "isCompleted",

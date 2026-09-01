@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authConfig } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getRollingWindowStart } from '@/lib/exercises/rollingWindow'
 
 /**
  * POST endpoint that marks an exercise as completed for the authenticated user.
@@ -10,7 +11,7 @@ import { prisma } from '@/lib/prisma'
  * 1. Verifies the user is authenticated via their session
  * 2. Validates the exercise ID from the request body
  * 3. Looks up the user ID from their email
- * 4. Checks if the exercise was completed within the last month
+ * 4. Checks if the exercise was completed within the rolling 30-day window
  * 5. Creates an exercise completion record or updates existing one
  * 6. Handles errors like recent completions (409) and authentication issues (401)
  * 
@@ -40,22 +41,19 @@ export async function POST(request: Request) {
       return new NextResponse('User not found', { status: 401 })
     }
 
-    // Check if the exercise was completed within the last month
-    const oneMonthAgo = new Date()
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
-
+    // Check if the exercise was completed within the rolling 30-day window
     const recentCompletion = await prisma.exerciseCompletion.findFirst({
       where: {
         userId: user.id,
         exerciseId,
         createdAt: {
-          gte: oneMonthAgo
+          gte: getRollingWindowStart()
         }
       }
     })
 
     if (recentCompletion) {
-      return new NextResponse('Exercise completed within the last month', { status: 409 })
+      return new NextResponse('Exercise completed within the last 30 days', { status: 409 })
     }
 
     // Delete any older completion and create a new one

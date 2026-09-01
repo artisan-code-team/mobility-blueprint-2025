@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { REQUIRED_CATEGORIES } from '@/lib/exercises/categories'
+import { getRollingWindowStart } from '@/lib/exercises/rollingWindow'
 
 export type CatalogProgress = {
   /** Count of distinct required-plan exercises this user has completed within the last 30 days. */
@@ -29,14 +30,11 @@ export type CatalogProgress = {
  * student and be useless as a monthly goal.
  */
 export async function getCatalogProgress(userId: string): Promise<CatalogProgress> {
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
   const [completedCount, totalCount] = await Promise.all([
     prisma.exerciseCompletion.count({
       where: {
         userId,
-        createdAt: { gte: thirtyDaysAgo },
+        createdAt: { gte: getRollingWindowStart() },
         exercise: { category: { in: [...REQUIRED_CATEGORIES] } },
       },
     }),

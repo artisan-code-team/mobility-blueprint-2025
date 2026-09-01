@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import type { ExerciseCompletion, Exercise as PrismaExercise } from '@prisma/client'
 import { getCatalogProgress } from '@/lib/exercises/progress'
 import { BONUS_CATEGORIES, REQUIRED_CATEGORIES } from '@/lib/exercises/categories'
+import { ROLLING_WINDOW_SQL_INTERVAL } from '@/lib/exercises/rollingWindow'
 
 interface SuggestedExercise {
   id: string
@@ -31,7 +32,7 @@ export type DashboardDailySuggestionsPayload = {
 /**
  * Returns one un-completed exercise per category/subcategory group for the
  * given user, limited to `categories` and excluding anything completed in the
- * last month. Within each group, exercises that have gone longest without
+ * last 30 days. Within each group, exercises that have gone longest without
  * being completed are
  * prioritized (never-completed exercises rank above ones the user is merely
  * eligible for again after the cooldown), with a random tiebreak among
@@ -78,7 +79,7 @@ export async function getSuggestedExercises(
       FROM exercises e
       LEFT JOIN LastCompletion lc ON lc."exerciseId" = e.id
       WHERE e.category IN (${Prisma.join(categories)})
-        AND (lc.last_completed_at IS NULL OR lc.last_completed_at < NOW() - INTERVAL '1 month')
+        AND (lc.last_completed_at IS NULL OR lc.last_completed_at < NOW() - ${Prisma.raw(ROLLING_WINDOW_SQL_INTERVAL)})
         AND NOT EXISTS (
           SELECT 1 FROM CompletedTodaySlots cts
           WHERE cts.category = e.category
@@ -101,7 +102,7 @@ export async function getSuggestedExercises(
 
 /**
  * Returns all exercises the user is eligible for today (not completed
- * in the last month), in random order.
+ * in the last 30 days), in random order.
  */
 export async function getEligibleExercises(userId: string): Promise<SuggestedExercise[]> {
   return prisma.$queryRaw<SuggestedExercise[]>`
@@ -119,7 +120,7 @@ export async function getEligibleExercises(userId: string): Promise<SuggestedExe
       FROM exercise_completions ec
       WHERE e.id = ec."exerciseId"
       AND ec."userId" = ${userId}
-      AND ec."createdAt" >= NOW() - INTERVAL '1 month'
+      AND ec."createdAt" >= NOW() - ${Prisma.raw(ROLLING_WINDOW_SQL_INTERVAL)}
     )
     ORDER BY random();
   `
@@ -129,7 +130,7 @@ export async function getEligibleExercises(userId: string): Promise<SuggestedExe
  * Loads dashboard daily-suggestion data in one round trip where possible.
  *
  * `requiredPlanCompleteInRollingWindow` is true when the user has a completion
- * dated within the rolling one-month window for every Conditioning and
+ * dated within the rolling 30-day window for every Conditioning and
  * Restorative exercise (same rule as category pages and
  * `/api/exercises/complete`) — this is intentionally derived from
  * `getCatalogProgress`, not from `suggestedExercises` being empty, since

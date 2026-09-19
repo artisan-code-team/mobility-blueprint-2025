@@ -15,16 +15,23 @@ interface SanityExercise {
 
 /**
  * Syncs a single exercise between Sanity CMS and the Postgres database.
- * 
+ *
  * This function:
  * 1. Fetches the exercise data from Sanity CMS using the provided ID
  * 2. If the exercise no longer exists in Sanity, deletes it from Postgres
  * 3. If the exercise exists, creates or updates it in Postgres with the latest Sanity data
- * 
+ *
  * @param exerciseId - The Sanity _id of the exercise to sync
- * @returns The synced exercise data from Postgres, or null if the exercise was deleted
+ * @returns The synced exercise data from Postgres, or null if the exercise was deleted or skipped
  */
 async function syncExercise(exerciseId: string) {
+  // Drafts share a document with their published counterpart (`drafts.<id>` vs
+  // `<id>`). Syncing the draft under its own sanityId would create a second
+  // Postgres row for the same exercise, so only the published document syncs.
+  if (exerciseId.startsWith('drafts.')) {
+    return null
+  }
+
   const exercise = await client.fetch(`*[_type == "exercise" && _id == $id][0]{
     _id,
     name,
@@ -116,7 +123,7 @@ export async function POST(request: Request) {
  */
 export async function GET() {
   try {
-    const exercises = await client.fetch(`*[_type == "exercise"]{
+    const exercises = await client.fetch(`*[_type == "exercise" && !(_id in path("drafts.**"))]{
       _id,
       name,
       description,

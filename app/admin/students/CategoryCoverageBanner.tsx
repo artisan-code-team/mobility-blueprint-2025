@@ -13,14 +13,12 @@ const STATUS_LABEL: Record<CoverageStatus, string> = {
   none: 'needs attention',
 }
 
-// Solid, high-contrast fills rather than tinted chips — this banner exists
-// for a fast glance mid-class, so the states need to read at arm's length,
-// not just on close inspection. green-700/amber-700 with white text both
-// clear ~5:1 contrast; the lighter 500/600 shades measured under 3.3:1 and
-// looked washed out.
+// `full` is a solid fill (green-700/white, ~5:1 contrast) so it reads at
+// arm's length mid-class. `partial` stays the lighter tinted chip — Shaun
+// preferred how that one looked over the solid amber-700 fill.
 const STATUS_CLASS: Record<CoverageStatus, string> = {
   full: 'bg-green-700 text-white',
-  partial: 'bg-amber-700 text-white',
+  partial: 'bg-amber-100 text-amber-700',
   none: 'bg-slate-200 text-slate-500',
 }
 

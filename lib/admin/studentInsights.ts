@@ -98,27 +98,56 @@ export async function getStudentStaleness(userId: string): Promise<CategorizedSt
   }
 }
 
+/**
+ * `none` — no completion in this line within the window on either side.
+ * `partial` — one side (conditioning or restorative) has a completion within
+ * the window but the other doesn't; this is the immediate "yes, that just
+ * registered" feedback Shaun wants right after checking off an exercise,
+ * without needing the other side done too.
+ * `full` — both sides covered within the window (or the line has no catalog
+ * exercises on a side at all, which can't be held against it).
+ */
+export type CoverageStatus = 'none' | 'partial' | 'full'
+
 export type CategoryCoverageItem = {
   value: string
   abbreviation: string
   label: string
-  /** True once every exercise in this fascial line has been completed within the rolling window. */
-  covered: boolean
+  status: CoverageStatus
+}
+
+function lineStatus(itemsInLine: StalenessItem[]): CoverageStatus {
+  const conditioningItems = itemsInLine.filter((i) => i.category === 'conditioning')
+  const restorativeItems = itemsInLine.filter((i) => i.category === 'restorative')
+
+  // Only sides that actually have catalog exercises count — a side with zero
+  // exercises can't be held against or credited to the student, so it's
+  // dropped rather than treated as vacuously "done" (which would let an
+  // untouched conditioning-only line read as partial/full just because
+  // there's no restorative side to fail).
+  const sides = [conditioningItems, restorativeItems].filter((side) => side.length > 0)
+  if (sides.length === 0) return 'none'
+
+  const doneSides = sides.filter((side) => side.some((i) => isWithinRollingWindow(i.daysSince)))
+
+  if (doneSides.length === 0) return 'none'
+  if (doneSides.length === sides.length) return 'full'
+  return 'partial'
 }
 
 /**
- * Per-fascial-line coverage for the student's insights banner (CHA-68): a
- * line is "covered" once every exercise in it has a completion within the
- * same rolling window used everywhere else (`ROLLING_WINDOW_DAYS`) — not
- * just one, matching the "still needs attention" framing in the ticket. A
- * line with no catalog exercises at all reads as uncovered rather than
- * vacuously covered.
+ * Per-fascial-line coverage for the student's insights banner (CHA-68).
+ * The ticket left "what counts as checked off" as an open decision — Shaun's
+ * call: he wants to see a completion register immediately (one exercise on
+ * either side within the rolling window = `partial`), with `full` reserved
+ * for both conditioning and restorative done, so the banner works as a
+ * quick during-class glance instead of something he has to scroll the whole
+ * timeline to interpret.
  *
  * `subCategory` is optional in the schema, so a conditioning/restorative
  * exercise published without one wouldn't match any known line — rather
- * than silently vanishing from the coverage picture (letting every real
- * line read "covered" while that exercise was never done), it's rolled up
- * into a distinct "Uncategorized" entry so the gap stays visible.
+ * than silently vanishing from the coverage picture, it's rolled up into a
+ * distinct "Uncategorized" entry so the gap stays visible.
  */
 export function getCategoryCoverage(staleness: CategorizedStaleness): CategoryCoverageItem[] {
   const items = [...staleness.conditioning, ...staleness.restorative]
@@ -126,9 +155,7 @@ export function getCategoryCoverage(staleness: CategorizedStaleness): CategoryCo
 
   const lines: CategoryCoverageItem[] = FASCIAL_LINE_SUBCATEGORIES.map(({ value, abbreviation, label }) => {
     const itemsInLine = items.filter((i) => i.subCategory === value)
-    const covered = itemsInLine.length > 0 && itemsInLine.every((i) => isWithinRollingWindow(i.daysSince))
-
-    return { value, abbreviation, label, covered }
+    return { value, abbreviation, label, status: lineStatus(itemsInLine) }
   })
 
   const uncategorized = items.filter((i) => !i.subCategory || !knownSubCategories.has(i.subCategory))
@@ -137,7 +164,7 @@ export function getCategoryCoverage(staleness: CategorizedStaleness): CategoryCo
       value: 'uncategorized',
       abbreviation: '?',
       label: 'Uncategorized',
-      covered: uncategorized.every((i) => isWithinRollingWindow(i.daysSince)),
+      status: lineStatus(uncategorized),
     })
   }
 

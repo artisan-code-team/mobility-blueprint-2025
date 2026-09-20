@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { FASCIAL_LINE_SUBCATEGORIES } from '@/lib/exercises/categories'
-import { ROLLING_WINDOW_DAYS } from '@/lib/exercises/rollingWindow'
+import { isWithinRollingWindow } from '@/lib/exercises/rollingWindow'
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -113,16 +113,33 @@ export type CategoryCoverageItem = {
  * just one, matching the "still needs attention" framing in the ticket. A
  * line with no catalog exercises at all reads as uncovered rather than
  * vacuously covered.
+ *
+ * `subCategory` is optional in the schema, so a conditioning/restorative
+ * exercise published without one wouldn't match any known line — rather
+ * than silently vanishing from the coverage picture (letting every real
+ * line read "covered" while that exercise was never done), it's rolled up
+ * into a distinct "Uncategorized" entry so the gap stays visible.
  */
 export function getCategoryCoverage(staleness: CategorizedStaleness): CategoryCoverageItem[] {
   const items = [...staleness.conditioning, ...staleness.restorative]
+  const knownSubCategories = new Set<string>(FASCIAL_LINE_SUBCATEGORIES.map((line) => line.value))
 
-  return FASCIAL_LINE_SUBCATEGORIES.map(({ value, abbreviation, label }) => {
+  const lines: CategoryCoverageItem[] = FASCIAL_LINE_SUBCATEGORIES.map(({ value, abbreviation, label }) => {
     const itemsInLine = items.filter((i) => i.subCategory === value)
-    const covered =
-      itemsInLine.length > 0 &&
-      itemsInLine.every((i) => i.daysSince !== null && i.daysSince <= ROLLING_WINDOW_DAYS)
+    const covered = itemsInLine.length > 0 && itemsInLine.every((i) => isWithinRollingWindow(i.daysSince))
 
     return { value, abbreviation, label, covered }
   })
+
+  const uncategorized = items.filter((i) => !i.subCategory || !knownSubCategories.has(i.subCategory))
+  if (uncategorized.length > 0) {
+    lines.push({
+      value: 'uncategorized',
+      abbreviation: '?',
+      label: 'Uncategorized',
+      covered: uncategorized.every((i) => isWithinRollingWindow(i.daysSince)),
+    })
+  }
+
+  return lines
 }

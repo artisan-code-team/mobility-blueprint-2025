@@ -8,7 +8,7 @@ import { ExerciseDetailModal } from '@/app/components/ExerciseDetailModal'
 import { getExerciseVisual } from '@/app/components/exerciseVisuals'
 import type { StalenessItem } from '@/lib/admin/studentInsights'
 import { Exercise } from '@/app/types/exercise'
-import { ROLLING_WINDOW_DAYS } from '@/lib/exercises/rollingWindow'
+import { isWithinRollingWindow } from '@/lib/exercises/rollingWindow'
 
 interface StudentTimelineProps {
   studentId: string
@@ -29,7 +29,7 @@ function formatDaysSince(daysSince: number | null) {
  */
 function daysSinceBadgeClass(daysSince: number | null) {
   if (daysSince === null) return 'bg-red-50 text-red-700'
-  if (daysSince <= ROLLING_WINDOW_DAYS) return 'bg-green-50 text-green-700'
+  if (isWithinRollingWindow(daysSince)) return 'bg-green-50 text-green-700'
   return 'bg-slate-100 text-slate-600'
 }
 

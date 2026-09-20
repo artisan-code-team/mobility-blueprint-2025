@@ -17,7 +17,7 @@ export function CategoryCoverageBanner({ studentName, items }: CategoryCoverageB
     <div
       role="group"
       aria-label={`Fascial line coverage for ${studentName}`}
-      className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white/95 px-4 py-2 shadow-sm backdrop-blur"
+      className="sticky top-0 z-20 mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white/95 px-4 py-2 shadow-sm backdrop-blur"
     >
       <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Coverage</span>
       {items.map((item) => (
@@ -27,7 +27,7 @@ export function CategoryCoverageBanner({ studentName, items }: CategoryCoverageB
           title={`${item.label}: ${item.covered ? 'covered' : 'needs attention'}`}
           className={clsx(
             'inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-bold',
-            item.covered ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
+            item.covered ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'
           )}
         >
           {item.abbreviation}

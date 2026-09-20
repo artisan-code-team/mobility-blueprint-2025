@@ -1,5 +1,7 @@
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { FASCIAL_LINE_SUBCATEGORIES } from '@/lib/exercises/categories'
+import { ROLLING_WINDOW_DAYS } from '@/lib/exercises/rollingWindow'
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -94,4 +96,33 @@ export async function getStudentStaleness(userId: string): Promise<CategorizedSt
     conditioning: items.filter((i) => i.category === 'conditioning').sort(sortOldestFirst),
     restorative: items.filter((i) => i.category === 'restorative').sort(sortOldestFirst),
   }
+}
+
+export type CategoryCoverageItem = {
+  value: string
+  abbreviation: string
+  label: string
+  /** True once every exercise in this fascial line has been completed within the rolling window. */
+  covered: boolean
+}
+
+/**
+ * Per-fascial-line coverage for the student's insights banner (CHA-68): a
+ * line is "covered" once every exercise in it has a completion within the
+ * same rolling window used everywhere else (`ROLLING_WINDOW_DAYS`) — not
+ * just one, matching the "still needs attention" framing in the ticket. A
+ * line with no catalog exercises at all reads as uncovered rather than
+ * vacuously covered.
+ */
+export function getCategoryCoverage(staleness: CategorizedStaleness): CategoryCoverageItem[] {
+  const items = [...staleness.conditioning, ...staleness.restorative]
+
+  return FASCIAL_LINE_SUBCATEGORIES.map(({ value, abbreviation, label }) => {
+    const itemsInLine = items.filter((i) => i.subCategory === value)
+    const covered =
+      itemsInLine.length > 0 &&
+      itemsInLine.every((i) => i.daysSince !== null && i.daysSince <= ROLLING_WINDOW_DAYS)
+
+    return { value, abbreviation, label, covered }
+  })
 }

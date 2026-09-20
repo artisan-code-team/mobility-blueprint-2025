@@ -1,9 +1,10 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authConfig } from '@/lib/auth'
-import { getStudentStaleness, listStudents } from '@/lib/admin/studentInsights'
+import { getCategoryCoverage, getStudentStaleness, listStudents } from '@/lib/admin/studentInsights'
 import { StudentFilters } from './StudentFilters'
 import { StudentTimeline } from './StudentTimeline'
+import { CategoryCoverageBanner } from './CategoryCoverageBanner'
 
 /**
  * Single-owner admin gate. There's no roles/permissions system on User yet,
@@ -67,6 +68,10 @@ export default async function StudentsAdminPage({
             <h2 className="mb-4 text-xl font-semibold text-slate-900">
               Staleness for {selectedStudent.name || selectedStudent.email}
             </h2>
+            <CategoryCoverageBanner
+              studentName={selectedStudent.name || selectedStudent.email || 'this student'}
+              items={getCategoryCoverage(staleness)}
+            />
             <StudentTimeline
               studentId={selectedStudent.id}
               conditioning={staleness.conditioning}

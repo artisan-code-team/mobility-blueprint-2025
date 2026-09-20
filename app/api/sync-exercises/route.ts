@@ -93,12 +93,21 @@ export async function POST(request: Request) {
       )
     }
 
+    // Drafts fire this webhook too but are intentionally skipped by
+    // syncExercise (see the drafts.* guard there) — report that distinctly
+    // from a genuine deletion so the response stays accurate.
+    if (body._id.startsWith('drafts.')) {
+      return NextResponse.json({
+        message: `Exercise ${body._id} is a draft, skipped`
+      })
+    }
+
     // Handle the exercise sync
     const result = await syncExercise(body._id)
-    
+
     if (!result) {
-      return NextResponse.json({ 
-        message: `Exercise ${body._id} was deleted` 
+      return NextResponse.json({
+        message: `Exercise ${body._id} was deleted`
       })
     }
 

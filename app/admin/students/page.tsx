@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authConfig } from '@/lib/auth'
-import { getCategoryCoverage, getStudentStaleness, listStudents } from '@/lib/admin/studentInsights'
+import { getStudentStaleness, listStudents } from '@/lib/admin/studentInsights'
 import { StudentFilters } from './StudentFilters'
 import { StudentTimeline } from './StudentTimeline'
 import { CategoryCoverageBanner } from './CategoryCoverageBanner'
@@ -69,8 +69,9 @@ export default async function StudentsAdminPage({
               Staleness for {selectedStudent.name || selectedStudent.email}
             </h2>
             <CategoryCoverageBanner
+              key={selectedStudent.id}
               studentName={selectedStudent.name || selectedStudent.email || 'this student'}
-              items={getCategoryCoverage(staleness)}
+              staleness={staleness}
             />
             <StudentTimeline
               studentId={selectedStudent.id}

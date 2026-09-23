@@ -1,5 +1,7 @@
 import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { FASCIAL_LINE_SUBCATEGORIES } from '@/lib/exercises/categories'
+import { isWithinRollingWindow } from '@/lib/exercises/rollingWindow'
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -19,6 +21,8 @@ export type StalenessItem = {
   hasLeftRight: boolean
   /** Days since the student last completed this exercise, or null if never completed. */
   daysSince: number | null
+  /** When the student last completed this exercise, or null if never completed. */
+  completedAt: Date | null
 }
 
 export type CategorizedStaleness = {
@@ -79,6 +83,7 @@ export async function getStudentStaleness(userId: string): Promise<CategorizedSt
       subCategory: ex.subCategory,
       hasLeftRight: ex.hasLeftRight,
       daysSince,
+      completedAt: completedAt ?? null,
     }
   })
 
@@ -94,4 +99,88 @@ export async function getStudentStaleness(userId: string): Promise<CategorizedSt
     conditioning: items.filter((i) => i.category === 'conditioning').sort(sortOldestFirst),
     restorative: items.filter((i) => i.category === 'restorative').sort(sortOldestFirst),
   }
+}
+
+/**
+ * `none` — no completion in this line counts as done, on either side.
+ * `partial` — one side (conditioning or restorative) has a completion that
+ * counts but the other doesn't; this is the immediate "yes, that just
+ * registered" feedback Shaun wants right after checking off an exercise,
+ * without needing the other side done too.
+ * `full` — both sides covered (or the line has no catalog exercises on a
+ * side at all, which can't be held against it).
+ */
+export type CoverageStatus = 'none' | 'partial' | 'full'
+
+export type CategoryCoverageItem = {
+  value: string
+  abbreviation: string
+  label: string
+  status: CoverageStatus
+}
+
+/** Default "done" predicate: completed within the shared rolling window. */
+const isDoneByRollingWindow = (item: StalenessItem) => isWithinRollingWindow(item.daysSince)
+
+function lineStatus(itemsInLine: StalenessItem[], isDone: (item: StalenessItem) => boolean): CoverageStatus {
+  const conditioningItems = itemsInLine.filter((i) => i.category === 'conditioning')
+  const restorativeItems = itemsInLine.filter((i) => i.category === 'restorative')
+
+  // Only sides that actually have catalog exercises count — a side with zero
+  // exercises can't be held against or credited to the student, so it's
+  // dropped rather than treated as vacuously "done" (which would let an
+  // untouched conditioning-only line read as partial/full just because
+  // there's no restorative side to fail).
+  const sides = [conditioningItems, restorativeItems].filter((side) => side.length > 0)
+  if (sides.length === 0) return 'none'
+
+  const doneSides = sides.filter((side) => side.some(isDone))
+
+  if (doneSides.length === 0) return 'none'
+  if (doneSides.length === sides.length) return 'full'
+  return 'partial'
+}
+
+/**
+ * Per-fascial-line coverage for the student's insights banner (CHA-68).
+ * The ticket left "what counts as checked off" as an open decision — Shaun's
+ * call: he wants to see a completion register immediately (one exercise on
+ * either side counting as done = `partial`), with `full` reserved for both
+ * conditioning and restorative done, so the banner works as a quick
+ * during-class glance instead of something he has to scroll the whole
+ * timeline to interpret.
+ *
+ * `isDone` defaults to the shared rolling-window definition, but callers
+ * that need a different notion of "done" — e.g. the session-scoped coverage
+ * banner, which only counts completions since the instructor's current
+ * session started — can pass their own predicate.
+ *
+ * `subCategory` is optional in the schema, so a conditioning/restorative
+ * exercise published without one wouldn't match any known line — rather
+ * than silently vanishing from the coverage picture, it's rolled up into a
+ * distinct "Uncategorized" entry so the gap stays visible.
+ */
+export function getCategoryCoverage(
+  staleness: CategorizedStaleness,
+  isDone: (item: StalenessItem) => boolean = isDoneByRollingWindow
+): CategoryCoverageItem[] {
+  const items = [...staleness.conditioning, ...staleness.restorative]
+  const knownSubCategories = new Set<string>(FASCIAL_LINE_SUBCATEGORIES.map((line) => line.value))
+
+  const lines: CategoryCoverageItem[] = FASCIAL_LINE_SUBCATEGORIES.map(({ value, abbreviation, label }) => {
+    const itemsInLine = items.filter((i) => i.subCategory === value)
+    return { value, abbreviation, label, status: lineStatus(itemsInLine, isDone) }
+  })
+
+  const uncategorized = items.filter((i) => !i.subCategory || !knownSubCategories.has(i.subCategory))
+  if (uncategorized.length > 0) {
+    lines.push({
+      value: 'uncategorized',
+      abbreviation: '?',
+      label: 'Uncategorized',
+      status: lineStatus(uncategorized, isDone),
+    })
+  }
+
+  return lines
 }

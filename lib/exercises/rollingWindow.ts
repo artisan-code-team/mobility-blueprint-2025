@@ -23,6 +23,16 @@ export function getRollingWindowStart(now: Date = new Date()): Date {
 }
 
 /**
+ * True if a completion this many days ago still counts as "done" within the
+ * rolling window (`daysSince` from `getStudentStaleness`; null = never
+ * completed). Shared so the staleness timeline's badge color and the
+ * coverage banner's covered/uncovered state can't drift apart.
+ */
+export function isWithinRollingWindow(daysSince: number | null): boolean {
+  return daysSince !== null && daysSince <= ROLLING_WINDOW_DAYS
+}
+
+/**
  * Raw SQL interval text for `$queryRaw` templates. Wrap with `Prisma.raw(...)`
  * at the call site (kept as a plain string here, with no Prisma import, so
  * this file stays safe to import from client components via

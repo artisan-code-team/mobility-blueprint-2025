@@ -27,3 +27,19 @@ const BONUS_CATEGORY_SET: ReadonlySet<string> = new Set(BONUS_CATEGORIES)
 export function isBonusCategory(category: string): boolean {
   return BONUS_CATEGORY_SET.has(category)
 }
+
+/**
+ * The fascial-line taxonomy `subCategory` is scoped to — only exercises
+ * under the required categories (Conditioning, Restorative) carry one, per
+ * `sanity/schemaTypes/exercise.ts`'s `hidden` rule on that field. This is
+ * the "category" instructors mean when talking about coverage at a glance
+ * (e.g. CHA-68's admin insights banner) — values and order must match the
+ * Sanity `subCategory` options list.
+ */
+export const FASCIAL_LINE_SUBCATEGORIES = [
+  { value: 'lateralLines', abbreviation: 'LL', label: 'Lateral Lines' },
+  { value: 'innerLines', abbreviation: 'IL', label: 'Inner Lines' },
+  { value: 'frontLine', abbreviation: 'FL', label: 'Front Line' },
+  { value: 'backLine', abbreviation: 'BL', label: 'Back Line' },
+  { value: 'spiralLine', abbreviation: 'SL', label: 'Spiral Line' },
+] as const

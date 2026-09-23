@@ -4,6 +4,7 @@ import { authConfig } from '@/lib/auth'
 import { getStudentStaleness, listStudents } from '@/lib/admin/studentInsights'
 import { StudentFilters } from './StudentFilters'
 import { StudentTimeline } from './StudentTimeline'
+import { CategoryCoverageBanner } from './CategoryCoverageBanner'
 
 /**
  * Single-owner admin gate. There's no roles/permissions system on User yet,
@@ -67,6 +68,11 @@ export default async function StudentsAdminPage({
             <h2 className="mb-4 text-xl font-semibold text-slate-900">
               Staleness for {selectedStudent.name || selectedStudent.email}
             </h2>
+            <CategoryCoverageBanner
+              key={selectedStudent.id}
+              studentName={selectedStudent.name || selectedStudent.email || 'this student'}
+              staleness={staleness}
+            />
             <StudentTimeline
               studentId={selectedStudent.id}
               conditioning={staleness.conditioning}

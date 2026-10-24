@@ -5,7 +5,43 @@ import { prisma } from '@/lib/prisma'
 import { SubscriptionStatus, PricingTier } from '@prisma/client'
 import Stripe from 'stripe'
 
+// With the basil API version the billing period lives on the subscription
+// item, not the subscription. Reading it off the subscription yields
+// undefined -> Invalid Date, which makes the Prisma update throw and the
+// handler 500 before subscriptionStatus is ever written (CHA-22).
+function getBillingPeriod(subscription: Stripe.Subscription) {
+  const item = subscription.items.data[0]
+  if (!item) return null
+  return {
+    start: new Date(item.current_period_start * 1000),
+    end: new Date(item.current_period_end * 1000),
+  }
+}
+
+// Our enum only distinguishes access vs. no access. past_due stays ACTIVE
+// because Stripe retries the charge and fires subscription.deleted if it
+// gives up. incomplete/paused return null: leave the stored status alone.
+function toLocalStatus(status: Stripe.Subscription.Status): SubscriptionStatus | null {
+  switch (status) {
+    case 'active':
+    case 'trialing':
+    case 'past_due':
+      return SubscriptionStatus.ACTIVE
+    case 'canceled':
+    case 'unpaid':
+    case 'incomplete_expired':
+      return SubscriptionStatus.CANCELED
+    default:
+      return null
+  }
+}
+
 export async function POST(request: NextRequest) {
+  if (!STRIPE_WEBHOOK_SECRET) {
+    console.error('STRIPE_WEBHOOK_SECRET is not set; cannot verify Stripe webhooks')
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
+  }
+
   const body = await request.text()
   const headersList = await headers()
   const signature = headersList.get('stripe-signature')
@@ -104,26 +140,31 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     return
   }
 
+  const status = toLocalStatus(subscription.status)
+  if (!status) {
+    console.log(`Ignoring subscription ${subscription.id} in status ${subscription.status}`)
+    return
+  }
+
+  const period = getBillingPeriod(subscription)
+  if (!period) {
+    console.error(`Subscription ${subscription.id} has no items; cannot read billing period`)
+    return
+  }
+
   const metadata = subscription.metadata
   const tier = metadata.tier as PricingTier
   const monthlyPriceCents = parseInt(metadata.monthlyPriceCents || '0')
-
-  // Cast subscription to access period properties
-  const sub = subscription as Stripe.Subscription & {
-    current_period_start: number
-    current_period_end: number
-    cancel_at_period_end: boolean
-  }
 
   // Update user subscription status
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      subscriptionStatus: SubscriptionStatus.ACTIVE,
+      subscriptionStatus: status,
       pricingTier: tier,
       monthlyPriceCents,
-      subscriptionStart: new Date(sub.current_period_start * 1000),
-      subscriptionEnd: new Date(sub.current_period_end * 1000),
+      subscriptionStart: period.start,
+      subscriptionEnd: period.end,
     }
   })
 
@@ -131,23 +172,23 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   await prisma.subscription.upsert({
     where: { stripeSubscriptionId: subscription.id },
     update: {
-      status: SubscriptionStatus.ACTIVE,
+      status,
       tier,
       monthlyPriceCents,
-      currentPeriodStart: new Date(sub.current_period_start * 1000),
-      currentPeriodEnd: new Date(sub.current_period_end * 1000),
-      cancelAtPeriodEnd: sub.cancel_at_period_end,
+      currentPeriodStart: period.start,
+      currentPeriodEnd: period.end,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
     },
     create: {
       userId: user.id,
       stripeSubscriptionId: subscription.id,
       stripePriceId: subscription.items.data[0].price.id,
-      status: SubscriptionStatus.ACTIVE,
+      status,
       tier,
       monthlyPriceCents,
-      currentPeriodStart: new Date(sub.current_period_start * 1000),
-      currentPeriodEnd: new Date(sub.current_period_end * 1000),
-      cancelAtPeriodEnd: sub.cancel_at_period_end,
+      currentPeriodStart: period.start,
+      currentPeriodEnd: period.end,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
     }
   })
 }
@@ -164,17 +205,15 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return
   }
 
-  // Cast subscription to access period properties
-  const sub = subscription as Stripe.Subscription & {
-    current_period_end: number
-  }
+  // A canceled subscription must flip status even if the period can't be read.
+  const periodEnd = getBillingPeriod(subscription)?.end ?? new Date()
 
   // Update user subscription status to canceled
   await prisma.user.update({
     where: { id: user.id },
     data: {
       subscriptionStatus: SubscriptionStatus.CANCELED,
-      subscriptionEnd: new Date(sub.current_period_end * 1000),
+      subscriptionEnd: periodEnd,
     }
   })
 
@@ -183,7 +222,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     where: { stripeSubscriptionId: subscription.id },
     data: {
       status: SubscriptionStatus.CANCELED,
-      currentPeriodEnd: new Date(sub.current_period_end * 1000),
+      currentPeriodEnd: periodEnd,
     }
   })
 }
